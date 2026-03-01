@@ -1,0 +1,12 @@
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      glob: '*.{ts,tsx}'
+      run: npm run lint
+    type-check:
+      glob: '*.{ts,tsx}'
+      run: npm run type-check
+    format-check:
+      glob: '*.{ts,tsx,css}'
+      run: npm run format:check
