@@ -16,6 +16,7 @@ export function SoftwareSelect({ value, onChange }: Props) {
       >
         <option value="none">Изберете</option>
         <option value="chirp">Chirp</option>
+        <option value="anytone">Anytone</option>
       </select>
     </div>
   );

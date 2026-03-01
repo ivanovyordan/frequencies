@@ -61,7 +61,7 @@ export interface StaticChannel {
 
 // ── App state types ────────────────────────────────────────────────────────────
 
-export type SoftwareOption = 'none' | 'chirp';
+export type SoftwareOption = 'none' | 'chirp' | 'anytone';
 
 export interface FilterState {
   national: boolean;

@@ -1,16 +1,41 @@
+import { useState } from 'react';
 import type { Repeater, StaticChannel, SoftwareOption } from '../../types/repeater';
 import { buildChirpCsv, downloadCsv } from '../../services/chirpBuilder';
+import {
+  buildAnytoneZip,
+  countAnytoneChannels,
+  downloadBlob,
+} from '../../services/anytoneBuilder';
 
-const SOFTWARE_LABELS: Record<SoftwareOption, string> = {
-  none: '',
-  chirp: 'Chirp',
-};
+// ── Count helpers ──────────────────────────────────────────────────────────────
 
-/** Count entries the selected software will actually export. */
-function countExportable(entries: (Repeater | StaticChannel)[], software: SoftwareOption): number {
-  if (software === 'chirp') return entries.filter((e) => e.modes.fm.enabled).length;
+function chirpFmCount(entries: (Repeater | StaticChannel)[]): number {
+  return entries.filter((e) => e.modes.fm.enabled).length;
+}
+
+function totalExportable(entries: (Repeater | StaticChannel)[], software: SoftwareOption): number {
+  if (software === 'chirp') return chirpFmCount(entries);
+  if (software === 'anytone') {
+    const { fm, dmr } = countAnytoneChannels(entries);
+    return fm + dmr;
+  }
   return 0;
 }
+
+// ── Info label ─────────────────────────────────────────────────────────────────
+
+function infoLabel(entries: (Repeater | StaticChannel)[], software: SoftwareOption): string {
+  if (software === 'chirp') {
+    return `${chirpFmCount(entries)} FM канала → Chirp`;
+  }
+  if (software === 'anytone') {
+    const { fm, dmr } = countAnytoneChannels(entries);
+    return dmr > 0 ? `${fm} FM + ${dmr} DMR → Anytone` : `${fm} FM → Anytone`;
+  }
+  return '';
+}
+
+// ── Component ──────────────────────────────────────────────────────────────────
 
 interface Props {
   software: SoftwareOption;
@@ -18,30 +43,40 @@ interface Props {
 }
 
 export function DownloadBar({ software, entries }: Props) {
-  const count = countExportable(entries, software);
-  const disabled = software === 'none' || count === 0;
+  const [downloading, setDownloading] = useState(false);
+  const count = totalExportable(entries, software);
+  const disabled = software === 'none' || count === 0 || downloading;
 
-  function handleDownload() {
+  async function handleDownload() {
     if (software === 'chirp') {
-      const csv = buildChirpCsv(entries);
-      downloadCsv(csv, 'честоти-chirp.csv');
+      downloadCsv(buildChirpCsv(entries), 'честоти-chirp.csv');
+      return;
+    }
+    if (software === 'anytone') {
+      setDownloading(true);
+      try {
+        const blob = await buildAnytoneZip(entries);
+        downloadBlob(blob, 'честоти-anytone.zip');
+      } finally {
+        setDownloading(false);
+      }
     }
   }
 
   return (
     <footer className="download-bar">
       {software !== 'none' && (
-        <span className="download-info">
-          {count} FM канала за {SOFTWARE_LABELS[software]}
-        </span>
+        <span className="download-info">{infoLabel(entries, software)}</span>
       )}
       <button
         className="btn btn-primary"
-        onClick={handleDownload}
+        onClick={() => {
+          void handleDownload();
+        }}
         disabled={disabled}
         aria-label="Изтегли файловете за програмиране"
       >
-        Изтегли файлове
+        {downloading ? 'Подготвяне…' : 'Изтегли файлове'}
       </button>
     </footer>
   );
