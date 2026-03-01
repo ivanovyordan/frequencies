@@ -59,6 +59,11 @@ export interface StaticChannel {
   modes: RepeaterModes;
 }
 
+/** Type guard to distinguish repeaters from static channels. */
+export function isRepeater(entry: Repeater | StaticChannel): entry is Repeater {
+  return 'disabled' in entry;
+}
+
 // ── App state types ────────────────────────────────────────────────────────────
 
 export type SoftwareOption = 'none' | 'chirp' | 'anytone';
@@ -77,25 +82,3 @@ export interface Coordinates {
   longitude: number | null;
 }
 
-// ── Chirp output types ─────────────────────────────────────────────────────────
-
-export interface ChirpRow {
-  Location: number;
-  Name: string;
-  Frequency: number; // MHz
-  Duplex: '' | '+' | '-';
-  Offset: number; // MHz
-  Tone: 'Tone' | '';
-  rToneFreq: number; // Hz e.g. 88.5
-  cToneFreq: number;
-  DtcsCode: number;
-  DtcsPolarity: 'NN';
-  Mode: 'FM';
-  TStep: 25;
-  Skip: '';
-  Comment: string;
-  URCALL: '';
-  RPT1CALL: '';
-  RPT2CALL: '';
-  DVCODE: '';
-}

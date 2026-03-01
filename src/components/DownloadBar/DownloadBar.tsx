@@ -1,11 +1,8 @@
 import { useState } from 'react';
 import type { Repeater, StaticChannel, SoftwareOption } from '../../types/repeater';
-import { buildChirpCsv, downloadCsv } from '../../services/chirpBuilder';
-import {
-  buildAnytoneZip,
-  countAnytoneChannels,
-  downloadBlob,
-} from '../../services/anytoneBuilder';
+import { buildChirpCsv } from '../../services/chirpBuilder';
+import { buildAnytoneZip, countAnytoneChannels } from '../../services/anytoneBuilder';
+import { download } from '../../utils/download';
 
 // ── Count helpers ──────────────────────────────────────────────────────────────
 
@@ -49,14 +46,15 @@ export function DownloadBar({ software, entries }: Props) {
 
   async function handleDownload() {
     if (software === 'chirp') {
-      downloadCsv(buildChirpCsv(entries), 'честоти-chirp.csv');
+      const blob = new Blob([buildChirpCsv(entries)], { type: 'text/csv;charset=utf-8;' });
+      download(blob, 'честоти-chirp.csv');
       return;
     }
     if (software === 'anytone') {
       setDownloading(true);
       try {
         const blob = await buildAnytoneZip(entries);
-        downloadBlob(blob, 'честоти-anytone.zip');
+        download(blob, 'честоти-anytone.zip');
       } finally {
         setDownloading(false);
       }

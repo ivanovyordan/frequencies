@@ -22,15 +22,17 @@ export function ControlPanel({
   onSoftwareChange,
 }: Props) {
   return (
-    <div className="bg-white border-b border-slate-200 px-5 py-4 flex gap-8 items-end flex-wrap">
-      <CoordinatesInput
-        coords={coords}
-        onCoordsChange={onCoordsChange}
-        onFindMe={onFindMe}
-        geoLoading={geoLoading}
-        geoError={geoError}
-      />
-      <SoftwareSelect value={software} onChange={onSoftwareChange} />
+    <div className="bg-white border-b border-slate-200 px-5 py-4 flex flex-col gap-2">
+      <div className="flex gap-8 items-end flex-wrap">
+        <CoordinatesInput
+          coords={coords}
+          onCoordsChange={onCoordsChange}
+          onFindMe={onFindMe}
+          geoLoading={geoLoading}
+        />
+        <SoftwareSelect value={software} onChange={onSoftwareChange} />
+      </div>
+      {geoError && <p className="text-xs text-red-600">{geoError}</p>}
     </div>
   );
 }

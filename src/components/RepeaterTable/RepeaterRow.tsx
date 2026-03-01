@@ -1,15 +1,9 @@
 import type { Repeater, StaticChannel, Coordinates, RepeaterModes } from '../../types/repeater';
 import { haversineKm } from '../../utils/geo';
+import { channelName } from '../../utils/channelName';
 
 function hzToMhz(hz: number): string {
   return (hz / 1_000_000).toFixed(4);
-}
-
-/** Strip RV/RU tokens; fall back to the full string if nothing remains. */
-function displayChannel(channel: string): string {
-  const parts = channel.split(',').map((c) => c.trim());
-  const filtered = parts.filter((c) => !/^R[UV]/i.test(c));
-  return filtered.length > 0 ? filtered.join(', ') : channel;
 }
 
 const tdCls = 'px-3 py-[7px] border-b border-slate-200 align-middle group-hover:bg-slate-50';
@@ -62,7 +56,7 @@ export function RepeaterRow({ entry, index, coords, showDistance }: Props) {
     <tr className="group">
       <td className={tdCls}>{index + 1}</td>
       <td className={tdMonoCls}>
-        <strong>{displayChannel(entry.freq.channel)}</strong>
+        <strong>{channelName(entry)}</strong>
       </td>
       <td className={tdMonoCls}>{hzToMhz(entry.freq.rx)}</td>
       <td className={tdMonoCls}>{entry.freq.rx === entry.freq.tx ? '—' : hzToMhz(entry.freq.tx)}</td>

@@ -13,16 +13,9 @@ interface Props {
   onCoordsChange: (c: Coordinates) => void;
   onFindMe: () => void;
   geoLoading: boolean;
-  geoError: string | null;
 }
 
-export function CoordinatesInput({
-  coords,
-  onCoordsChange,
-  onFindMe,
-  geoLoading,
-  geoError,
-}: Props) {
+export function CoordinatesInput({ coords, onCoordsChange, onFindMe, geoLoading }: Props) {
   return (
     <div className="flex flex-col gap-1.5">
       <span className={labelCls}>Твоите координати</span>
@@ -74,7 +67,6 @@ export function CoordinatesInput({
           {geoLoading ? '…' : 'Намери ме'}
         </button>
       </div>
-      {geoError && <div className="text-xs text-red-600 mt-1">{geoError}</div>}
     </div>
   );
 }
