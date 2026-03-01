@@ -146,36 +146,22 @@ function buildAllChannels(entries: (Repeater | StaticChannel)[]): {
 
 const CHANNEL_HEADER =
   'No.,Channel Name,Receive Frequency,Transmit Frequency,Channel Type,' +
-  'Transmit Power,Band Width,CTCSS/DCS Decode,CTCSS/DCS Encode,Contact,' +
-  'Contact Call Type,Contact TG/DMR ID,Radio ID,Busy Lock/TX Permit,' +
-  'Squelch Mode,Optional Signal,2Tone Decode,DTMF ID,Color Code,Slot,' +
-  'Scan List,Receive Group List,TX Prohibit,Reverse,Simplex TDMA,' +
-  'TDMA Adaptive,AES Digital Encryption,Digital Encryption,Call Confirmation,' +
-  'Talk Around(Simplex),Work Alone,Custom CTCSS,2TONE Decode,Ranging,' +
-  'Through Mode,APRS RX,Analog APRS PTT Mode,Digital APRS PTT Mode,' +
-  'APRS Report Type,Digital APRS Report Channel,Correct Frequency[Hz],' +
-  'SMS Confirmation,Exclude channel from roaming,DMR MODE,DataACK Disable,' +
-  'R5toneBot,R5ToneEot';
-
-// Columns 23-46 are identical for all channels (defaults)
-const CHANNEL_TAIL = [
-  'Off', 'Off', 'Off', 'Off',              // TX Prohibit, Reverse, Simplex TDMA, TDMA Adaptive
-  'Normal Encryption', 'Off', 'Off', 'Off', 'Off', // AES, Digital Enc, Confirm, Talk Around, Work Alone
-  '251.1', '0', 'Off', 'Off',              // Custom CTCSS, 2TONE Decode, Ranging, Through Mode
-  'Off', 'Off', 'Off', 'Analog', '1',      // APRS RX, Analog PTT, Digital PTT, Report Type, Report Ch
-  '0', 'Off', '0',                         // Correct Freq, SMS Confirm, Exclude from roaming
-];
+  'Transmit Power,Band Widht,CTCSS/DCS Decode,CTCSS/DCS Encode,Contact,' +
+  'Contact TG/DMR ID,Busy Lock/TX Permit,Squelch Mode,Optional Signal,' +
+  'DTMF ID,2Tone ID,5Tone ID,PTT ID,Color Code,Slot,' +
+  'Scan List,Receive Group List,PTT Prohibit,Reverse,Simplex TDMA,Slot Suit';
 
 function analogRow(ch: AnalogCh, no: number): string {
   const ct = ctcssTone(ch.ctcss);
   return [
     String(no), ch.name, mhz(ch.rx), mhz(ch.tx),
     'A', 'High', '25K', ct, ct,
-    '', 'Group Call', '0', '1',
-    'Always', 'Carrier', 'Off', '0', '1', '0', '0',
-    'None', 'None',
-    ...CHANNEL_TAIL,
-    '0', '1', '0', '0', // DMR MODE=0 (analog), DataACK Disable=1, R5toneBot=0, R5ToneEot=0
+    '', '0',                        // Contact, Contact TG/DMR ID
+    'Always', 'Carrier', 'Off',     // Busy Lock/TX Permit, Squelch Mode, Optional Signal
+    '1', '0', '0', '0',            // DTMF ID, 2Tone ID, 5Tone ID, PTT ID
+    '0', '0',                       // Color Code, Slot
+    'None', 'None',                 // Scan List, Receive Group List
+    'Off', 'Off', 'Off', 'Off',    // PTT Prohibit, Reverse, Simplex TDMA, Slot Suit
   ].join(',');
 }
 
@@ -184,12 +170,12 @@ function dmrRow(ch: DmrCh, no: number): string {
   return [
     String(no), ch.name, mhz(ch.rx), mhz(ch.tx),
     'D', 'High', '12.5K', 'Off', 'Off',
-    ch.tgName, 'Group Call', String(ch.tgId), '1',
-    'Same Color Code', 'CTCSS/DCS', 'Off', '0', '1',
-    String(ch.colorCode), String(ch.slot),
-    scanList, 'None',
-    ...CHANNEL_TAIL,
-    '1', '1', '0', '0', // DMR MODE=1 (repeater), DataACK Disable=1, R5toneBot=0, R5ToneEot=0
+    ch.tgName, String(ch.tgId),                  // Contact, Contact TG/DMR ID
+    'Same Color Code', 'CTCSS/DCS', 'Off',        // Busy Lock/TX Permit, Squelch Mode, Optional Signal
+    '1', '0', '0', '0',                           // DTMF ID, 2Tone ID, 5Tone ID, PTT ID
+    String(ch.colorCode), String(ch.slot),         // Color Code, Slot
+    scanList, 'None',                              // Scan List, Receive Group List
+    'Off', 'Off', 'Off', 'Off',                   // PTT Prohibit, Reverse, Simplex TDMA, Slot Suit
   ].join(',');
 }
 
@@ -219,10 +205,7 @@ function buildTalkGroupCsv(dmrChannels: DmrCh[]): string {
 
 // ── Zone.CSV ───────────────────────────────────────────────────────────────────
 
-const ZONE_HEADER =
-  'No.,Zone Name,Zone Channel Member,Zone Channel Member RX Frequency,' +
-  'Zone Channel Member TX Frequency,A Channel,A Channel RX Frequency,' +
-  'A Channel TX Frequency,B Channel,B Channel RX Frequency,B Channel TX Frequency';
+const ZONE_HEADER = 'No.,Zone Name,Zone Channel Member';
 
 function groupBy<K, V>(items: V[], key: (v: V) => K): Map<K, V[]> {
   const map = new Map<K, V[]>();
@@ -236,15 +219,7 @@ function groupBy<K, V>(items: V[], key: (v: V) => K): Map<K, V[]> {
 
 function zoneRow(no: number, name: string, members: ZoneMember[]): string {
   const chNames = members.map((m) => m.name).join('|');
-  const rxFreqs = members.map((m) => mhz(m.rx)).join('|');
-  const txFreqs = members.map((m) => mhz(m.tx)).join('|');
-  const a = members[0];
-  const b = members[1] ?? a; // use first channel for both A and B if only one
-  return [
-    String(no), name, chNames, rxFreqs, txFreqs,
-    a.name, mhz(a.rx), mhz(a.tx),
-    b.name, mhz(b.rx), mhz(b.tx),
-  ].join(',');
+  return [String(no), name, chNames].join(',');
 }
 
 function buildZoneCsv(analogs: AnalogCh[], dmrChannels: DmrCh[]): string {
