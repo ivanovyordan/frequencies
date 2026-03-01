@@ -205,7 +205,11 @@ function buildTalkGroupCsv(dmrChannels: DmrCh[]): string {
 
 // ── Zone.CSV ───────────────────────────────────────────────────────────────────
 
-const ZONE_HEADER = 'No.,Zone Name,Zone Channel Member,A Channel,B Channel';
+const ZONE_HEADER =
+  'No.,Zone Name,Zone Channel Member,' +
+  'Zone Channel Member RX Frequency,Zone Channel Member TX Frequency,' +
+  'A Channel,A Channel RX Frequency,A Channel TX Frequency,' +
+  'B Channel,B Channel RX Frequency,B Channel TX Frequency,Zone Hide';
 
 function groupBy<K, V>(items: V[], key: (v: V) => K): Map<K, V[]> {
   const map = new Map<K, V[]>();
@@ -219,9 +223,16 @@ function groupBy<K, V>(items: V[], key: (v: V) => K): Map<K, V[]> {
 
 function zoneRow(no: number, name: string, members: ZoneMember[]): string {
   const chNames = members.map((m) => m.name).join('|');
-  const a = members[0].name;
-  const b = (members[1] ?? members[0]).name;
-  return [String(no), name, chNames, a, b].join(',');
+  const rxFreqs = members.map((m) => mhz(m.rx)).join('|');
+  const txFreqs = members.map((m) => mhz(m.tx)).join('|');
+  const a = members[0];
+  const b = members[1] ?? members[0];
+  return [
+    String(no), name, chNames, rxFreqs, txFreqs,
+    a.name, mhz(a.rx), mhz(a.tx),
+    b.name, mhz(b.rx), mhz(b.tx),
+    '0',
+  ].join(',');
 }
 
 function buildZoneCsv(analogs: AnalogCh[], dmrChannels: DmrCh[]): string {
