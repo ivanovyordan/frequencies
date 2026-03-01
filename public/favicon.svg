@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 56">
+  <defs>
+    <clipPath id="body">
+      <rect x="4" y="10" width="28" height="44" rx="4"/>
+    </clipPath>
+  </defs>
+
+  <!-- Bulgarian flag stripes, clipped to radio body -->
+  <rect x="4" y="10" width="28" height="15" fill="#FFFFFF" clip-path="url(#body)"/>
+  <rect x="4" y="25" width="28" height="15" fill="#009A44" clip-path="url(#body)"/>
+  <rect x="4" y="40" width="28" height="14" fill="#D62612" clip-path="url(#body)"/>
+
+  <!-- Stripe separators -->
+  <line x1="4" y1="25" x2="32" y2="25" stroke="#1E293B" stroke-width="0.5" opacity="0.25"/>
+  <line x1="4" y1="40" x2="32" y2="40" stroke="#1E293B" stroke-width="0.5" opacity="0.25"/>
+
+  <!-- Body outline -->
+  <rect x="4" y="10" width="28" height="44" rx="4" fill="none" stroke="#1E293B" stroke-width="2"/>
+
+  <!-- Antenna -->
+  <rect x="25" y="2" width="5" height="13" rx="2.5" fill="#1E293B"/>
+
+  <!-- Speaker grille (white area) -->
+  <line x1="9" y1="14" x2="27" y2="14" stroke="#94A3B8" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="9" y1="18" x2="27" y2="18" stroke="#94A3B8" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="9" y1="22" x2="27" y2="22" stroke="#94A3B8" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Screen (green area) -->
+  <rect x="8" y="27" width="16" height="9" rx="1.5" fill="#0F172A" opacity="0.45"/>
+
+  <!-- Volume knob (green area, right) -->
+  <circle cx="28" cy="30" r="3" fill="#0F172A" opacity="0.35"/>
+
+  <!-- PTT button (left side, protrudes from body) -->
+  <rect x="0" y="29" width="4" height="8" rx="2" fill="#B91C1C"/>
+
+  <!-- Keypad dots (red area) -->
+  <circle cx="13" cy="46" r="2.5" fill="#FFFFFF" opacity="0.6"/>
+  <circle cx="20" cy="46" r="2.5" fill="#FFFFFF" opacity="0.6"/>
+  <circle cx="27" cy="46" r="2.5" fill="#FFFFFF" opacity="0.6"/>
+</svg>

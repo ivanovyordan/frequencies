@@ -21,7 +21,16 @@ function App() {
   return (
     <div className="flex flex-col min-h-dvh bg-slate-100 text-slate-800 text-sm">
       <header className="h-14 bg-blue-700 text-white flex items-center px-5 gap-3 shadow-md shrink-0">
-        <h1 className="text-lg font-semibold tracking-tight">Честотен програматор</h1>
+        <img src="/favicon.svg" alt="" className="h-8 w-auto" aria-hidden="true" />
+        <h1 className="text-lg font-semibold tracking-tight flex-1">Честотен програматор</h1>
+        <a
+          href="https://github.com/ivanovyordan/frequencies"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-200 hover:text-white text-xs transition-colors"
+        >
+          Yordan, LZ9DB
+        </a>
       </header>
 
       <div className="grid grid-cols-[240px_1fr] flex-1 overflow-hidden">
