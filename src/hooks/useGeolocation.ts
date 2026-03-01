@@ -30,7 +30,7 @@ export function useGeolocation(): UseGeolocationResult {
         setGeoError(`Неуспешна геолокация: ${err.message}`);
         setGeoLoading(false);
       },
-      { timeout: 10_000 },
+      { timeout: 10_000, enableHighAccuracy: false },
     );
   }, []);
 
