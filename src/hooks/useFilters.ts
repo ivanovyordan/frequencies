@@ -2,14 +2,12 @@ import { useState, useCallback, useMemo } from 'react';
 import type { FilterState, SoftwareOption } from '../types/repeater';
 
 // These toggles are incompatible with Chirp (analog-only software)
-const CHIRP_DISABLED: ReadonlyArray<keyof FilterState> = ['dmr', 'dstar', 'fusion', 'parrot'];
+const CHIRP_DISABLED: ReadonlyArray<keyof FilterState> = ['dmr', 'parrot'];
 
 const DEFAULT_FILTERS: FilterState = {
   national: true,
   analog: true,
   dmr: false,
-  dstar: false,
-  fusion: false,
   parrot: false,
   simplex: false,
   pmr: false,

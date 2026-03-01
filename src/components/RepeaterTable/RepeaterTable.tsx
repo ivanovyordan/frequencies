@@ -47,10 +47,9 @@ export function RepeaterTable({ entries, loading, error, coords }: Props) {
         <thead>
           <tr>
             <th className={thCls}>#</th>
-            <th className={thCls}>Позивна</th>
             <th className={thCls}>Канал</th>
-            <th className={thCls}>Честота (MHz)</th>
-            <th className={thCls}>Отместване</th>
+            <th className={thCls}>RX (MHz)</th>
+            <th className={thCls}>TX (MHz)</th>
             <th className={thCls}>CTCSS (Hz)</th>
             <th className={thCls}>Град</th>
             <th className={thCls}>Режими</th>

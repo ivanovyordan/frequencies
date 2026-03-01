@@ -27,12 +27,14 @@ function isNational(r: Repeater): boolean {
   return getNationalNum(r) !== null;
 }
 
+function hasUsableMode(r: Repeater): boolean {
+  return r.modes.fm.enabled || r.modes.dmr.enabled;
+}
+
 function matchesNonNationalFilters(r: Repeater, filters: FilterState): boolean {
   return (
     (filters.analog && r.modes.fm.enabled) ||
     (filters.dmr && r.modes.dmr.enabled) ||
-    (filters.dstar && r.modes.dstar.enabled) ||
-    (filters.fusion && r.modes.fusion.enabled) ||
     (filters.parrot && r.modes.parrot.enabled)
   );
 }
@@ -62,9 +64,11 @@ export function applyFilters(
 ): (Repeater | StaticChannel)[] {
   const active = repeaters.filter((r) => !r.disabled);
 
-  // Section 1 — National
+  // Section 1 — National (FM or DMR only; skip pure D-Star/Fusion)
   const nationals: Repeater[] = filters.national
-    ? active.filter(isNational).sort((a, b) => (getNationalNum(a) ?? 99) - (getNationalNum(b) ?? 99))
+    ? active
+        .filter((r) => isNational(r) && hasUsableMode(r))
+        .sort((a, b) => (getNationalNum(a) ?? 99) - (getNationalNum(b) ?? 99))
     : [];
 
   const nationalCallsigns = new Set(nationals.map((r) => r.callsign));

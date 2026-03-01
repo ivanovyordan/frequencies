@@ -10,8 +10,6 @@ const FILTERS: FilterDef[] = [
   { key: 'national', label: 'Национални' },
   { key: 'analog', label: 'Аналогови' },
   { key: 'dmr', label: 'DMR' },
-  { key: 'dstar', label: 'D-Star' },
-  { key: 'fusion', label: 'Fusion' },
   { key: 'parrot', label: 'Папагали' },
   { key: 'simplex', label: 'Симплекс' },
   { key: 'pmr', label: 'PMR' },

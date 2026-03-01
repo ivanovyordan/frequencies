@@ -67,8 +67,6 @@ export interface FilterState {
   national: boolean;
   analog: boolean;
   dmr: boolean;
-  dstar: boolean;
-  fusion: boolean;
   parrot: boolean;
   simplex: boolean;
   pmr: boolean;
