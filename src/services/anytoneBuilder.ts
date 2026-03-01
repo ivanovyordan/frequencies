@@ -205,7 +205,7 @@ function buildTalkGroupCsv(dmrChannels: DmrCh[]): string {
 
 // ── Zone.CSV ───────────────────────────────────────────────────────────────────
 
-const ZONE_HEADER = 'No.,Zone Name,Zone Channel Member';
+const ZONE_HEADER = 'No.,Zone Name,Zone Channel Member,A Channel,B Channel';
 
 function groupBy<K, V>(items: V[], key: (v: V) => K): Map<K, V[]> {
   const map = new Map<K, V[]>();
@@ -219,7 +219,9 @@ function groupBy<K, V>(items: V[], key: (v: V) => K): Map<K, V[]> {
 
 function zoneRow(no: number, name: string, members: ZoneMember[]): string {
   const chNames = members.map((m) => m.name).join('|');
-  return [String(no), name, chNames].join(',');
+  const a = members[0].name;
+  const b = (members[1] ?? members[0]).name;
+  return [String(no), name, chNames, a, b].join(',');
 }
 
 function buildZoneCsv(analogs: AnalogCh[], dmrChannels: DmrCh[]): string {
