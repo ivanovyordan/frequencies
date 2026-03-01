@@ -19,15 +19,15 @@ function App() {
   );
 
   return (
-    <>
-      <header className="app-header">
-        <h1>Честотен програматор</h1>
+    <div className="flex flex-col min-h-dvh bg-slate-100 text-slate-800 text-sm">
+      <header className="h-14 bg-blue-700 text-white flex items-center px-5 gap-3 shadow-md shrink-0">
+        <h1 className="text-lg font-semibold tracking-tight">Честотен програматор</h1>
       </header>
 
-      <div className="app-main">
+      <div className="grid grid-cols-[240px_1fr] flex-1 overflow-hidden">
         <FilterPanel filters={filters} disabledKeys={disabledKeys} onToggle={onToggle} />
 
-        <div className="content-area">
+        <div className="flex flex-col overflow-hidden">
           <ControlPanel
             coords={coords}
             onCoordsChange={setCoords}
@@ -47,7 +47,7 @@ function App() {
       </div>
 
       <DownloadBar software={software} entries={filteredEntries} />
-    </>
+    </div>
   );
 }
 

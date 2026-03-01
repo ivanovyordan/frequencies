@@ -1,5 +1,13 @@
 import type { Coordinates } from '../../types/repeater';
 
+const labelCls = 'text-[11px] font-semibold uppercase tracking-[0.8px] text-slate-500';
+
+const inputCls =
+  'h-8 w-[110px] px-2 border border-slate-200 rounded bg-white text-slate-800 font-mono ' +
+  'text-[13px] outline-none transition-colors ' +
+  'focus:border-blue-700 focus:ring-[3px] focus:ring-blue-700/15 ' +
+  '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none';
+
 interface Props {
   coords: Coordinates;
   onCoordsChange: (c: Coordinates) => void;
@@ -16,11 +24,11 @@ export function CoordinatesInput({
   geoError,
 }: Props) {
   return (
-    <div className="control-group">
-      <span className="control-label">Твоите координати</span>
-      <div className="coords-fields">
-        <div className="coords-field">
-          <span>Ширина</span>
+    <div className="flex flex-col gap-1.5">
+      <span className={labelCls}>Твоите координати</span>
+      <div className="flex gap-2 items-end">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[11px] text-slate-500">Ширина</span>
           <input
             type="number"
             step="0.0001"
@@ -34,11 +42,12 @@ export function CoordinatesInput({
                 latitude: e.target.value ? Number(e.target.value) : null,
               })
             }
+            className={inputCls}
             aria-label="Географска ширина"
           />
         </div>
-        <div className="coords-field">
-          <span>Дължина</span>
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[11px] text-slate-500">Дължина</span>
           <input
             type="number"
             step="0.0001"
@@ -52,11 +61,12 @@ export function CoordinatesInput({
                 longitude: e.target.value ? Number(e.target.value) : null,
               })
             }
+            className={inputCls}
             aria-label="Географска дължина"
           />
         </div>
         <button
-          className="btn btn-secondary"
+          className="h-8 px-3.5 inline-flex items-center justify-center border border-slate-200 rounded bg-slate-50 text-slate-800 text-[13px] font-medium transition-colors hover:enabled:bg-slate-200 disabled:opacity-45 disabled:cursor-not-allowed whitespace-nowrap"
           onClick={onFindMe}
           disabled={geoLoading}
           aria-label="Намери ме автоматично"
@@ -64,7 +74,7 @@ export function CoordinatesInput({
           {geoLoading ? '…' : 'Намери ме'}
         </button>
       </div>
-      {geoError && <div className="geo-error">{geoError}</div>}
+      {geoError && <div className="text-xs text-red-600 mt-1">{geoError}</div>}
     </div>
   );
 }

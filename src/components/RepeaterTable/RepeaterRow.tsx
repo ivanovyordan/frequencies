@@ -11,15 +11,33 @@ function formatOffset(rx: number, tx: number): string {
   return `${sign}${hzToMhz(Math.abs(tx - rx))}`;
 }
 
+const tdCls = 'px-3 py-[7px] border-b border-slate-200 align-middle group-hover:bg-slate-50';
+const tdMonoCls = `${tdCls} font-mono`;
+
+const badgeCls =
+  'inline-block px-[5px] py-[1px] rounded-[3px] text-[10px] font-semibold uppercase tracking-[0.4px]';
+
 function ModeBadges({ modes }: { modes: RepeaterModes }) {
   return (
-    <div className="mode-badges">
-      {modes.fm.enabled && <span className="badge badge-fm">FM</span>}
-      {modes.usb?.enabled && <span className="badge badge-usb">SSB</span>}
-      {modes.dmr.enabled && <span className="badge badge-dmr">DMR</span>}
-      {modes.dstar.enabled && <span className="badge badge-dstar">D-Star</span>}
-      {modes.fusion.enabled && <span className="badge badge-fusion">Fusion</span>}
-      {modes.parrot.enabled && <span className="badge badge-parrot">Папагал</span>}
+    <div className="flex gap-0.5 flex-wrap">
+      {modes.fm.enabled && (
+        <span className={`${badgeCls} bg-blue-100 text-blue-800`}>FM</span>
+      )}
+      {modes.usb?.enabled && (
+        <span className={`${badgeCls} bg-sky-100 text-sky-800`}>SSB</span>
+      )}
+      {modes.dmr.enabled && (
+        <span className={`${badgeCls} bg-amber-100 text-amber-800`}>DMR</span>
+      )}
+      {modes.dstar.enabled && (
+        <span className={`${badgeCls} bg-green-100 text-green-800`}>D-Star</span>
+      )}
+      {modes.fusion.enabled && (
+        <span className={`${badgeCls} bg-violet-100 text-violet-800`}>Fusion</span>
+      )}
+      {modes.parrot.enabled && (
+        <span className={`${badgeCls} bg-pink-100 text-pink-800`}>Папагал</span>
+      )}
     </div>
   );
 }
@@ -40,21 +58,21 @@ export function RepeaterRow({ entry, index, coords, showDistance }: Props) {
       : null;
 
   return (
-    <tr>
-      <td>{index + 1}</td>
-      <td>
-        <strong style={{ fontFamily: 'var(--font-mono)' }}>{entry.callsign}</strong>
+    <tr className="group">
+      <td className={tdCls}>{index + 1}</td>
+      <td className={tdCls}>
+        <strong className="font-mono">{entry.callsign}</strong>
       </td>
-      <td className="freq-cell">{entry.freq.channel}</td>
-      <td className="freq-cell">{hzToMhz(entry.freq.rx)}</td>
-      <td className="freq-cell">{formatOffset(entry.freq.rx, entry.freq.tx)}</td>
-      <td className="freq-cell">{entry.freq.tone > 0 ? entry.freq.tone.toFixed(1) : '—'}</td>
-      <td>{entry.place}</td>
-      <td>
+      <td className={tdMonoCls}>{entry.freq.channel}</td>
+      <td className={tdMonoCls}>{hzToMhz(entry.freq.rx)}</td>
+      <td className={tdMonoCls}>{formatOffset(entry.freq.rx, entry.freq.tx)}</td>
+      <td className={tdMonoCls}>{entry.freq.tone > 0 ? entry.freq.tone.toFixed(1) : '—'}</td>
+      <td className={tdCls}>{entry.place}</td>
+      <td className={tdCls}>
         <ModeBadges modes={entry.modes} />
       </td>
       {showDistance && (
-        <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)' }}>
+        <td className={`${tdMonoCls} text-slate-500`}>
           {distKm !== null ? `${Math.round(distKm)} км` : '—'}
         </td>
       )}

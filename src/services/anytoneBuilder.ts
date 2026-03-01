@@ -1,6 +1,7 @@
 import JSZip from 'jszip';
 import type { Repeater, StaticChannel, RepeaterModeDMR } from '../types/repeater';
 import { BG_DMR_TALKGROUPS } from '../constants/dmrTalkGroups';
+import { oblastForPlace } from '../constants/bgOblasts';
 
 // ── Internal types ─────────────────────────────────────────────────────────────
 
@@ -9,7 +10,8 @@ interface AnalogCh {
   rx: number; // Hz
   tx: number; // Hz
   ctcss: number; // Hz, 0 = off
-  zone: string;
+  zone: string;  // 'National' | 'Local' | 'Simplex' | 'PMR'
+  place: string; // city/oblast for per-region zones
 }
 
 interface DmrCh {
@@ -57,17 +59,26 @@ function parseColorCode(dmr: RepeaterModeDMR): number | null {
   return isNaN(cc) ? null : cc;
 }
 
-function isVhf(hz: number): boolean {
-  return hz >= 144_000_000 && hz < 148_000_000;
+// Matches national-network channel designators: R0–R12 (not RU/RV/etc.)
+const NATIONAL_CHANNEL_RE = /^R(\d+)$/;
+
+function isNationalRepeater(rep: Repeater): boolean {
+  for (const ch of rep.freq.channel.split(',').map((c) => c.trim())) {
+    const m = NATIONAL_CHANNEL_RE.exec(ch);
+    if (m && parseInt(m[1], 10) <= 12) return true;
+  }
+  return false;
 }
 
 // ── Channel extraction ─────────────────────────────────────────────────────────
 
 function analogZoneName(entry: Repeater | StaticChannel): string {
   if (!('disabled' in entry)) {
+    // StaticChannel — PMR or Simplex
     return entry.callsign.startsWith('PMR') ? 'PMR' : 'Simplex';
   }
-  return isVhf(entry.freq.rx) ? 'VHF FM' : 'UHF FM';
+  // Repeater — national network vs. local
+  return isNationalRepeater(entry) ? 'National' : 'Local';
 }
 
 function toAnalogCh(entry: Repeater | StaticChannel): AnalogCh {
@@ -77,6 +88,7 @@ function toAnalogCh(entry: Repeater | StaticChannel): AnalogCh {
     tx: entry.freq.tx,
     ctcss: entry.freq.tone,
     zone: analogZoneName(entry),
+    place: entry.place,
   };
 }
 
@@ -239,16 +251,30 @@ function buildZoneCsv(analogs: AnalogCh[], dmrChannels: DmrCh[]): string {
   const rows = [ZONE_HEADER];
   let no = 1;
 
-  // Analog zones grouped by band/type
-  const analogGroups = groupBy(analogs, (ch) => ch.zone);
-  for (const [name, channels] of analogGroups) {
-    rows.push(zoneRow(no++, name, channels));
+  function addZone(name: string, members: ZoneMember[]): void {
+    if (members.length === 0) return;
+    rows.push(zoneRow(no++, name, members));
   }
 
-  // One DMR zone per repeater (zone name = callsign)
-  const dmrGroups = groupBy(dmrChannels, (ch) => ch.repeaterCallsign);
-  for (const [callsign, channels] of dmrGroups) {
-    rows.push(zoneRow(no++, callsign, channels));
+  const nationals = analogs.filter((ch) => ch.zone === 'National');
+  const locals = analogs.filter((ch) => ch.zone === 'Local');
+  const simplex = analogs.filter((ch) => ch.zone === 'Simplex');
+  const pmr = analogs.filter((ch) => ch.zone === 'PMR');
+  const repeaterAnalogs = [...nationals, ...locals];
+
+  // Fixed category zones
+  addZone('All Channels', [...analogs, ...dmrChannels]);
+  addZone('National Repeaters', nationals);
+  addZone('Local Repeaters', locals);
+  addZone('All Analog', repeaterAnalogs);
+  addZone('All DMR', dmrChannels);
+  addZone('Simplex', simplex);
+  addZone('PMR', pmr);
+
+  // Per-oblast zones (analog repeaters only, grouped by administrative area)
+  const byOblast = groupBy(repeaterAnalogs, (ch) => oblastForPlace(ch.place));
+  for (const [oblast, channels] of byOblast) {
+    addZone(oblast.slice(0, 16), channels);
   }
 
   return rows.join(CRLF);

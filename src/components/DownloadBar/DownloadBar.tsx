@@ -64,12 +64,12 @@ export function DownloadBar({ software, entries }: Props) {
   }
 
   return (
-    <footer className="download-bar">
+    <footer className="h-16 bg-white border-t border-slate-200 flex items-center justify-center gap-4 px-5 shrink-0 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]">
       {software !== 'none' && (
-        <span className="download-info">{infoLabel(entries, software)}</span>
+        <span className="text-xs text-slate-500">{infoLabel(entries, software)}</span>
       )}
       <button
-        className="btn btn-primary"
+        className="h-10 px-6 inline-flex items-center justify-center bg-blue-700 text-white text-sm font-medium rounded transition-colors hover:enabled:bg-blue-800 disabled:opacity-45 disabled:cursor-not-allowed"
         onClick={() => {
           void handleDownload();
         }}

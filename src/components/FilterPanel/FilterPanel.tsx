@@ -25,8 +25,10 @@ interface Props {
 
 export function FilterPanel({ filters, disabledKeys, onToggle }: Props) {
   return (
-    <aside className="filter-panel">
-      <div className="filter-panel-title">Филтри</div>
+    <aside className="bg-white border-r border-slate-200 px-4 py-5 overflow-y-auto flex flex-col gap-1">
+      <div className="text-[11px] font-semibold uppercase tracking-[0.8px] text-slate-500 mb-2">
+        Филтри
+      </div>
       {FILTERS.map(({ key, label }) => (
         <ToggleSwitch
           key={key}
