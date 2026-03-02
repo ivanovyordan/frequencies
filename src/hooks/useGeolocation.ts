@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import type { Coordinates } from '../types/repeater';
+import { useLocalStorage } from './useLocalStorage';
 
 export interface UseGeolocationResult {
   coords: Coordinates;
@@ -10,7 +11,7 @@ export interface UseGeolocationResult {
 }
 
 export function useGeolocation(): UseGeolocationResult {
-  const [coords, setCoords] = useState<Coordinates>({ latitude: null, longitude: null });
+  const [coords, setCoords] = useLocalStorage<Coordinates>('freq_coords', { latitude: null, longitude: null });
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
 
@@ -32,7 +33,7 @@ export function useGeolocation(): UseGeolocationResult {
       },
       { timeout: 10_000, enableHighAccuracy: false },
     );
-  }, []);
+  }, [setCoords]);
 
   return { coords, geoLoading, geoError, findMe, setCoords };
 }

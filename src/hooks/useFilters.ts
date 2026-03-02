@@ -1,5 +1,6 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import type { FilterState, SoftwareOption } from '../types/repeater';
+import { useLocalStorage } from './useLocalStorage';
 
 // These toggles are incompatible with Chirp (analog-only software)
 const CHIRP_DISABLED: ReadonlyArray<keyof FilterState> = ['dmr', 'parrot'];
@@ -22,8 +23,8 @@ export interface UseFiltersResult {
 }
 
 export function useFilters(): UseFiltersResult {
-  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
-  const [software, setSoftware] = useState<SoftwareOption>('none');
+  const [filters, setFilters] = useLocalStorage<FilterState>('freq_filters', DEFAULT_FILTERS);
+  const [software, setSoftware] = useLocalStorage<SoftwareOption>('freq_software', 'none');
 
   const disabledKeys = useMemo<ReadonlySet<keyof FilterState>>(
     () => (software === 'chirp' ? new Set(CHIRP_DISABLED) : new Set()),
@@ -35,7 +36,7 @@ export function useFilters(): UseFiltersResult {
       if (disabledKeys.has(key)) return;
       setFilters((prev) => ({ ...prev, [key]: !prev[key] }));
     },
-    [disabledKeys],
+    [disabledKeys, setFilters],
   );
 
   const onSoftwareChange = useCallback((v: SoftwareOption) => {
@@ -49,7 +50,7 @@ export function useFilters(): UseFiltersResult {
         return next;
       });
     }
-  }, []);
+  }, [setFilters, setSoftware]);
 
   return { filters, disabledKeys, software, onToggle, onSoftwareChange };
 }
