@@ -3,7 +3,7 @@ import type { FilterState, SoftwareOption } from '../types/repeater';
 import { useLocalStorage } from './useLocalStorage';
 
 // These toggles are incompatible with Chirp (analog-only software)
-const CHIRP_DISABLED: ReadonlyArray<keyof FilterState> = ['dmr', 'parrot'];
+const CHIRP_DISABLED: ReadonlyArray<keyof FilterState> = ['dmr'];
 
 const DEFAULT_FILTERS: FilterState = {
   national: true,

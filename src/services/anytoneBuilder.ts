@@ -128,41 +128,62 @@ function groupBy<K, V>(items: V[], key: (v: V) => K): Map<K, V[]> {
   return map;
 }
 
+function mhz5(hz: number): string {
+  return formatMhz(hz, 5);
+}
+
 // ── Channel.CSV ────────────────────────────────────────────────────────────────
 
 function buildChannelCsv(channels: Channel[]): string {
+  // 56 columns matching AnyTone CPS export format
   const header = [
     'No.', 'Channel Name', 'Receive Frequency', 'Transmit Frequency', 'Channel Type',
-    'Transmit Power', 'Band Widht', 'CTCSS/DCS Decode', 'CTCSS/DCS Encode', 'Contact',
-    'Contact TG/DMR ID', 'Busy Lock/TX Permit', 'Squelch Mode', 'Optional Signal',
-    'DTMF ID', '2Tone ID', '5Tone ID', 'PTT ID', 'Color Code', 'Slot',
-    'Scan List', 'Receive Group List', 'PTT Prohibit', 'Reverse', 'Simplex TDMA', 'Slot Suit',
+    'Transmit Power', 'Band Width', 'CTCSS/DCS Decode', 'CTCSS/DCS Encode', 'Contact',
+    'Contact Call Type', 'Contact TG/DMR ID', 'Radio ID', 'Busy Lock/TX Permit', 'Squelch Mode',
+    'Optional Signal', 'DTMF ID', '2Tone ID', '5Tone ID', 'PTT ID',
+    'RX Color Code', 'Slot', 'Scan List', 'Receive Group List', 'PTT Prohibit',
+    'Reverse', 'Simplex TDMA', 'Slot Suit', 'AES Digital Encryption', 'Digital Encryption',
+    'Call Confirmation', 'Talk Around(Simplex)', 'Work Alone', 'Custom CTCSS', '2TONE Decode',
+    'Ranging', 'Through Mode', 'APRS RX', 'Analog APRS PTT Mode', 'Digital APRS PTT Mode',
+    'APRS Report Type', 'Digital APRS Report Channel', 'Correct Frequency[Hz]', 'SMS Confirmation',
+    'Exclude channel from roaming', 'DMR MODE', 'DataACK Disable', 'R5toneBot', 'R5ToneEot',
+    'Auto Scan', 'Ana Aprs Mute', 'Send Talker Alias', 'AnaAprsTxPath', 'ARC4',
+    'ex_emg_kind', 'TxCC',
   ];
+
+  // Trailing 28 columns that are the same for every channel
+  const tail = [
+    'Normal Encryption', 'Off', 'Off', 'Off', 'Off', '251.1', '0',
+    'Off', 'Off', 'Off', 'Off', 'Off', 'Off', '1', '0', 'Off',
+    '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1',
+  ];
+
   const rows = channels.map((ch, i) => {
+    const rxMhz = mhz5(ch.rx);
+    const txMhz = mhz5(ch.tx);
+
     if (ch.dmr) {
       return [
-        i + 1, ch.name, formatMhz(ch.tx), formatMhz(ch.rx),
-        'D', 'High', '12.5K', 'Off', 'Off',
-        ch.dmr.tgName, ch.dmr.tgId,
-        'Same Color Code', 'CTCSS/DCS', 'Off',
-        1, 0, 0, 0,
-        ch.dmr.colorCode, ch.dmr.slot,
-        ch.dmr.tgName, 'None',
-        'Off', 'Off', 'Off', 'Off',
+        i + 1, ch.name, rxMhz, txMhz, 'D-Digital',
+        'High', '12.5K', 'Off', 'Off', ch.dmr.tgName,
+        'Group Call', ch.dmr.tgId, 'Local', 'Always', 'Carrier', 'Off',
+        '1', '1', '1', 'Off', ch.dmr.colorCode, ch.dmr.slot,
+        'None', 'None', 'Off', 'Off', 'Off', 'Off',
+        ...tail,
       ];
     }
+
     const ct = ctcssTone(ch.ctcss);
     return [
-      i + 1, ch.name, formatMhz(ch.tx), formatMhz(ch.rx),
-      'A', 'High', '25K', ct, ct,
-      '', 0,
-      'Always', 'Carrier', 'Off',
-      1, 0, 0, 0,
-      0, 0,
-      'None', 'None',
-      'Off', 'Off', 'Off', 'Off',
+      i + 1, ch.name, rxMhz, txMhz, 'Analog',
+      'High', '25K', ct, ct, '',
+      'Group Call', '0', 'Local', 'Always', 'Carrier', 'Off',
+      '1', '1', '1', 'Off', '0', '1',
+      'None', 'None', 'Off', 'Off', 'Off', 'Off',
+      ...tail,
     ];
   });
+
   return buildCsv(header, rows);
 }
 
@@ -183,13 +204,29 @@ function buildTalkGroupCsv(channels: Channel[]): string {
 // ── Zone.CSV ───────────────────────────────────────────────────────────────────
 
 function buildZoneCsv(channels: Channel[]): string {
+  // 12 columns matching AnyTone CPS zone export (trailing space on "Zone Hide " is intentional)
+  const header = [
+    'No.', 'Zone Name', 'Zone Channel Member',
+    'Zone Channel Member RX Frequency', 'Zone Channel Member TX Frequency',
+    'A Channel', 'A Channel RX Frequency', 'A Channel TX Frequency',
+    'B Channel', 'B Channel RX Frequency', 'B Channel TX Frequency', 'Zone Hide ',
+  ];
+
   const rows: (string | number)[][] = [];
   let no = 1;
 
   function addZone(name: string, members: Channel[]): void {
     if (members.length === 0) return;
     const chNames = members.map((m) => m.name).join('|');
-    rows.push([no++, name, chNames, chNames]);
+    const chRx = members.map((m) => mhz5(m.rx)).join('|');
+    const chTx = members.map((m) => mhz5(m.tx)).join('|');
+    const a = members[0];
+    const b = members.length > 1 ? members[1] : a;
+    rows.push([
+      no++, name, chNames, chRx, chTx,
+      a.name, mhz5(a.rx), mhz5(a.tx),
+      b.name, mhz5(b.rx), mhz5(b.tx), '0',
+    ]);
   }
 
   const nationals = channels.filter((ch) => ch.category === 'national');
@@ -210,38 +247,73 @@ function buildZoneCsv(channels: Channel[]): string {
     addZone(oblast.slice(0, 16), members);
   }
 
-  return buildCsv(['No.', 'Zone Name', 'Zone Channel List', 'Zone Sub Channel List'], rows);
+  return buildCsv(header, rows);
 }
 
 // ── ScanList.CSV ───────────────────────────────────────────────────────────────
 
 function buildScanListCsv(channels: Channel[]): string {
   const header = [
-    'No.', 'Scan List Name', 'Scan Channel Member', 'Scan Channel Member RX Frequency',
-    'Scan Channel Member TX Frequency', 'Scan Mode', 'Priority Channel Select',
+    'No.', 'Scan List Name', 'Scan Channel Member',
+    'Scan Channel Member RX Frequency', 'Scan Channel Member TX Frequency',
+    'Scan Mode', 'Priority Channel Select',
     'Priority Channel 1', 'Priority Channel 1 RX Frequency', 'Priority Channel 1 TX Frequency',
     'Priority Channel 2', 'Priority Channel 2 RX Frequency', 'Priority Channel 2 TX Frequency',
-    'Revert Channel', 'Look Back Time A[s]', 'Look Back Time B[s]', 'Dropout Delay Time[s]', 'Dwell Time[s]',
+    'Revert Channel', 'Look Back Time A[s]', 'Look Back Time B[s]',
+    'Dropout Delay Time[s]', 'Dwell Time[s]',
   ];
+
   const rows: (string | number)[][] = [];
   let no = 1;
 
   const byTg = groupBy(channels.filter((ch) => !!ch.dmr), (ch) => ch.dmr!.tgId);
   for (const [tgId, tgChs] of byTg) {
-    const p1 = tgChs[0];
     rows.push([
       no++, tgLabel(tgId),
       tgChs.map((c) => c.name).join('|'),
-      tgChs.map((c) => formatMhz(c.tx)).join('|'),
-      tgChs.map((c) => formatMhz(c.rx)).join('|'),
-      'Off', 'Off',
-      p1.name, formatMhz(p1.tx), formatMhz(p1.rx),
-      '', '', '',
-      'Selected', '0.5', '0.5', '0.1', '0.1',
+      tgChs.map((c) => mhz5(c.rx)).join('|'),
+      tgChs.map((c) => mhz5(c.tx)).join('|'),
+      'Time', 'Off',
+      'None', 'None', 'None',
+      'None', 'None', 'None',
+      'Selected', '2.0', '3.0', '0.1', '5.0',
     ]);
   }
 
   return buildCsv(header, rows);
+}
+
+// ── anytone.LST ────────────────────────────────────────────────────────────────
+
+function buildLst(): string {
+  const entries = [
+    [0, 'Channel.CSV'],
+    [1, 'RadioIDList.CSV'],
+    [2, 'Zone.CSV'],
+    [3, 'ScanList.CSV'],
+    [4, 'AnalogAddressBook.CSV'],
+    [5, 'TalkGroups.CSV'],
+    [6, 'PrefabricatedSMS.CSV'],
+    [7, 'FM.CSV'],
+    [8, 'ReceiveGroupCallList.CSV'],
+    [9, '5ToneEncode.CSV'],
+    [10, '2ToneEncode.CSV'],
+    [11, 'DTMFEncode.CSV'],
+    [12, 'HotKey_QuickCall.CSV'],
+    [13, 'HotKey_State.CSV'],
+    [14, 'HotKey_HotKey.CSV'],
+    [15, 'DigitalContactList.CSV'],
+    [16, 'AutoRepeaterOffsetFrequencys.CSV'],
+    [17, 'RoamingChannel.CSV'],
+    [18, 'RoamingZone.CSV'],
+    [19, 'APRS.CSV'],
+    [20, 'GPSRoaming.CSV'],
+    [21, 'OptionalSetting.CSV'],
+    [22, 'AlertTone.CSV'],
+    [23, 'AESEncryptionCode.CSV'],
+    [24, 'ARC4EncryptionCode.CSV'],
+  ] as const;
+  return `${entries.length}\r\n${entries.map(([n, f]) => `${n},"${f}"`).join('\r\n')}\r\n`;
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────────
@@ -258,7 +330,7 @@ export function countAnytoneChannels(entries: (Repeater | StaticChannel)[]): {
   };
 }
 
-/** Build a ZIP Blob containing the four Anytone CPS import files. */
+/** Build a ZIP Blob containing the AnyTone CPS import files. */
 export async function buildAnytoneZip(
   entries: (Repeater | StaticChannel)[],
 ): Promise<Blob> {
@@ -269,6 +341,7 @@ export async function buildAnytoneZip(
   zip.file('TalkGroups.CSV', buildTalkGroupCsv(channels));
   zip.file('Zone.CSV', buildZoneCsv(channels));
   zip.file('ScanList.CSV', buildScanListCsv(channels));
+  zip.file('anytone.LST', buildLst());
 
   return zip.generateAsync({ type: 'blob' });
 }

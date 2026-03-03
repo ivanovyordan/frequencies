@@ -26,8 +26,8 @@ function toRow(entry: Repeater | StaticChannel, location: number): (string | num
   return [
     location,
     channelName(entry).slice(0, 8).toUpperCase(),
-    formatMhz(tx),
-    toDuplex(tx, rx),
+    formatMhz(rx),
+    toDuplex(rx, tx),
     formatMhz(Math.abs(tx - rx)),
     tone > 0 ? 'Tone' : '',
     toneFreq.toFixed(1),
