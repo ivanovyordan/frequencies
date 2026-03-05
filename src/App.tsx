@@ -1,14 +1,16 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useRepeaters } from './hooks/useRepeaters';
 import { useFilters } from './hooks/useFilters';
 import { useGeolocation } from './hooks/useGeolocation';
 import { useRadioId } from './hooks/useRadioId';
 import { useCustomChannels } from './hooks/useCustomChannels';
+import { useContactList } from './hooks/useContactList';
 import { applyFilters } from './services/filter';
 import { FilterPanel } from './components/FilterPanel/FilterPanel';
 import { ControlPanel } from './components/ControlPanel/ControlPanel';
 import { RepeaterTable } from './components/RepeaterTable/RepeaterTable';
 import { DownloadBar } from './components/DownloadBar/DownloadBar';
+import { SettingsModal } from './components/Settings/SettingsModal';
 
 function App() {
   const { repeaters, loading, error } = useRepeaters();
@@ -16,6 +18,8 @@ function App() {
   const { coords, geoLoading, geoError, findMe, setCoords } = useGeolocation();
   const [radioId, setRadioId] = useRadioId();
   const [customChannels, setCustomChannels] = useCustomChannels();
+  const [contactList, setContactList] = useContactList();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const filteredEntries = useMemo(
     () => applyFilters(repeaters, filters, coords, customChannels),
@@ -35,6 +39,16 @@ function App() {
         >
           Yordan, LZ9DB
         </a>
+        <button
+          onClick={() => setSettingsOpen(true)}
+          className="text-blue-200 hover:text-white transition-colors"
+          aria-label="Настройки"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+        </button>
       </header>
 
       <div className="grid grid-cols-[240px_1fr] flex-1 overflow-hidden">
@@ -55,8 +69,6 @@ function App() {
             geoError={geoError}
             software={software}
             onSoftwareChange={onSoftwareChange}
-            radioId={radioId}
-            onRadioIdChange={setRadioId}
           />
           <RepeaterTable
             entries={filteredEntries}
@@ -67,7 +79,21 @@ function App() {
         </div>
       </div>
 
-      <DownloadBar software={software} entries={filteredEntries} radioId={radioId} />
+      <DownloadBar
+        software={software}
+        entries={filteredEntries}
+        radioId={radioId}
+        contactList={contactList}
+      />
+
+      <SettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        radioId={radioId}
+        onRadioIdChange={setRadioId}
+        contactList={contactList}
+        onContactListChange={setContactList}
+      />
     </div>
   );
 }

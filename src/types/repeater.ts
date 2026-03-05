@@ -98,3 +98,8 @@ export interface RadioId {
   dmrId: string;    // numeric string, empty = not set
 }
 
+export interface ContactListSettings {
+  enabled: boolean;
+  scope: 'bulgaria' | 'worldwide';
+}
+

@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import type { RadioId, Repeater, StaticChannel, SoftwareOption } from '../../types/repeater';
+import type { ContactListSettings, RadioId, Repeater, StaticChannel, SoftwareOption } from '../../types/repeater';
 import { buildChirpCsv } from '../../services/chirpBuilder';
 import { buildAnytoneZip, countAnytoneChannels } from '../../services/anytoneBuilder';
+import { buildContactListCsv } from '../../services/contactListBuilder';
 import { download } from '../../utils/download';
 
 // ── Count helpers ──────────────────────────────────────────────────────────────
@@ -30,9 +31,10 @@ interface Props {
   software: SoftwareOption;
   entries: (Repeater | StaticChannel)[];
   radioId: RadioId;
+  contactList: ContactListSettings;
 }
 
-export function DownloadBar({ software, entries, radioId }: Props) {
+export function DownloadBar({ software, entries, radioId, contactList }: Props) {
   const [downloading, setDownloading] = useState(false);
   const count = totalExportable(entries, software);
   const disabled = count === 0 || downloading;
@@ -45,7 +47,10 @@ export function DownloadBar({ software, entries, radioId }: Props) {
     }
     setDownloading(true);
     try {
-      const blob = await buildAnytoneZip(entries, radioId);
+      const contactListCsv = contactList.enabled
+        ? await buildContactListCsv(contactList.scope)
+        : undefined;
+      const blob = await buildAnytoneZip(entries, radioId, contactListCsv);
       download(blob, 'честоти-anytone.zip');
     } finally {
       setDownloading(false);

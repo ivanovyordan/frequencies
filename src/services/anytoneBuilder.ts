@@ -343,6 +343,7 @@ export function countAnytoneChannels(entries: (Repeater | StaticChannel)[]): {
 export async function buildAnytoneZip(
   entries: (Repeater | StaticChannel)[],
   radioId: RadioId = { callsign: '', dmrId: '' },
+  contactListCsv?: string,
 ): Promise<Blob> {
   const channels = collectChannels(entries);
   const radioName = radioId.callsign.trim() || 'Local';
@@ -357,6 +358,10 @@ export async function buildAnytoneZip(
   const dmrIdNum = parseInt(radioId.dmrId, 10);
   if (radioId.callsign.trim() && !isNaN(dmrIdNum) && dmrIdNum > 0) {
     zip.file('RadioIDList.CSV', buildRadioIdListCsv({ callsign: radioName, dmrId: radioId.dmrId }));
+  }
+
+  if (contactListCsv) {
+    zip.file('DigitalContactList.CSV', contactListCsv);
   }
 
   return zip.generateAsync({ type: 'blob' });
