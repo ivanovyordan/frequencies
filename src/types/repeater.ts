@@ -75,6 +75,7 @@ export interface FilterState {
   parrot: boolean;
   simplex: boolean;
   pmr: boolean;
+  aprs: boolean;
 }
 
 export interface Coordinates {

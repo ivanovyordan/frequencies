@@ -13,6 +13,7 @@ const FILTERS: FilterDef[] = [
   { key: 'parrot', label: 'Папагали' },
   { key: 'simplex', label: 'Симплекс' },
   { key: 'pmr', label: 'PMR' },
+  { key: 'aprs', label: 'APRS' },
 ];
 
 interface Props {

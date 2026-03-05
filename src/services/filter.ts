@@ -1,6 +1,7 @@
 import type { Repeater, StaticChannel, FilterState, Coordinates } from '../types/repeater';
 import { SIMPLEX_CHANNELS } from '../constants/simplex';
 import { PMR_CHANNELS } from '../constants/pmr';
+import { APRS_CHANNELS } from '../constants/aprs';
 import { haversineKm } from '../utils/geo';
 import { isNational, getNationalNum } from '../utils/national';
 
@@ -83,6 +84,9 @@ export function applyFilters(
 
   // Section 4 — PMR
   if (filters.pmr) result.push(...PMR_CHANNELS);
+
+  // Section 5 — APRS
+  if (filters.aprs) result.push(...APRS_CHANNELS);
 
   return result;
 }
