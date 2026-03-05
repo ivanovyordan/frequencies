@@ -184,7 +184,7 @@ function buildChannelCsv(channels: Channel[], radioName: string): string {
 
     const ct = ctcssTone(ch.ctcss);
     return [
-      i + 1, ch.name, rxMhz, txMhz, 'Analog',
+      i + 1, ch.name, rxMhz, txMhz, 'A-Analog',
       'High', '25K', ct, ct, '',
       'Group Call', '0', radioName, 'Always', 'Carrier', 'Off',
       '1', '1', '1', 'Off', '0', '1',
@@ -294,34 +294,40 @@ function buildScanListCsv(channels: Channel[]): string {
 
 // ── anytone.LST ────────────────────────────────────────────────────────────────
 
-function buildLst(): string {
-  const entries = [
-    [0, 'Channel.CSV'],
-    [1, 'RadioIDList.CSV'],
-    [2, 'Zone.CSV'],
-    [3, 'ScanList.CSV'],
-    [4, 'AnalogAddressBook.CSV'],
-    [5, 'TalkGroups.CSV'],
-    [6, 'PrefabricatedSMS.CSV'],
-    [7, 'FM.CSV'],
-    [8, 'ReceiveGroupCallList.CSV'],
-    [9, '5ToneEncode.CSV'],
-    [10, '2ToneEncode.CSV'],
-    [11, 'DTMFEncode.CSV'],
-    [12, 'HotKey_QuickCall.CSV'],
-    [13, 'HotKey_State.CSV'],
-    [14, 'HotKey_HotKey.CSV'],
-    [15, 'DigitalContactList.CSV'],
-    [16, 'AutoRepeaterOffsetFrequencys.CSV'],
-    [17, 'RoamingChannel.CSV'],
-    [18, 'RoamingZone.CSV'],
-    [19, 'APRS.CSV'],
-    [20, 'GPSRoaming.CSV'],
-    [21, 'OptionalSetting.CSV'],
-    [22, 'AlertTone.CSV'],
-    [23, 'AESEncryptionCode.CSV'],
-    [24, 'ARC4EncryptionCode.CSV'],
-  ] as const;
+// Ordered list of all CPS-known files; indices are stable identifiers used by the radio.
+const CPS_FILE_INDEX: readonly string[] = [
+  'Channel.CSV',                 // 0
+  'RadioIDList.CSV',             // 1
+  'Zone.CSV',                    // 2
+  'ScanList.CSV',                // 3
+  'AnalogAddressBook.CSV',       // 4
+  'TalkGroups.CSV',              // 5
+  'PrefabricatedSMS.CSV',        // 6
+  'FM.CSV',                      // 7
+  'ReceiveGroupCallList.CSV',    // 8
+  '5ToneEncode.CSV',             // 9
+  '2ToneEncode.CSV',             // 10
+  'DTMFEncode.CSV',              // 11
+  'HotKey_QuickCall.CSV',        // 12
+  'HotKey_State.CSV',            // 13
+  'HotKey_HotKey.CSV',           // 14
+  'DigitalContactList.CSV',      // 15
+  'AutoRepeaterOffsetFrequencys.CSV', // 16
+  'RoamingChannel.CSV',          // 17
+  'RoamingZone.CSV',             // 18
+  'APRS.CSV',                    // 19
+  'GPSRoaming.CSV',              // 20
+  'OptionalSetting.CSV',         // 21
+  'AlertTone.CSV',               // 22
+  'AESEncryptionCode.CSV',       // 23
+  'ARC4EncryptionCode.CSV',      // 24
+];
+
+/** Build the LST manifest listing only files that are actually present in the zip. */
+function buildLst(presentFiles: Set<string>): string {
+  const entries = CPS_FILE_INDEX
+    .map((f, i) => [i, f] as const)
+    .filter(([, f]) => presentFiles.has(f));
   return `${entries.length}\r\n${entries.map(([n, f]) => `${n},"${f}"`).join('\r\n')}\r\n`;
 }
 
@@ -348,21 +354,26 @@ export async function buildAnytoneZip(
   const channels = collectChannels(entries);
   const radioName = radioId.callsign.trim() || 'Local';
 
-  const zip = new JSZip();
-  zip.file('Channel.CSV', buildChannelCsv(channels, radioName));
-  zip.file('TalkGroups.CSV', buildTalkGroupCsv(channels));
-  zip.file('Zone.CSV', buildZoneCsv(channels));
-  zip.file('ScanList.CSV', buildScanListCsv(channels));
-  zip.file('anytone.LST', buildLst());
+  const files = new Map<string, string>();
+  files.set('Channel.CSV', buildChannelCsv(channels, radioName));
+  files.set('TalkGroups.CSV', buildTalkGroupCsv(channels));
+  files.set('Zone.CSV', buildZoneCsv(channels));
+  files.set('ScanList.CSV', buildScanListCsv(channels));
 
   const dmrIdNum = parseInt(radioId.dmrId, 10);
   if (radioId.callsign.trim() && !isNaN(dmrIdNum) && dmrIdNum > 0) {
-    zip.file('RadioIDList.CSV', buildRadioIdListCsv({ callsign: radioName, dmrId: radioId.dmrId }));
+    files.set('RadioIDList.CSV', buildRadioIdListCsv({ callsign: radioName, dmrId: radioId.dmrId }));
   }
 
   if (contactListCsv) {
-    zip.file('DigitalContactList.CSV', contactListCsv);
+    files.set('DigitalContactList.CSV', contactListCsv);
   }
+
+  const zip = new JSZip();
+  for (const [name, content] of files) {
+    zip.file(name, content);
+  }
+  zip.file('anytone.LST', buildLst(new Set(files.keys())));
 
   return zip.generateAsync({ type: 'blob' });
 }

@@ -1,5 +1,5 @@
 import type { Repeater, StaticChannel } from '../types/repeater';
-import { buildCsv } from '../utils/csv';
+import { buildCsvPlain } from '../utils/csv';
 import { channelName } from '../utils/channelName';
 import { formatMhz } from '../utils/freq';
 
@@ -51,5 +51,5 @@ export function buildChirpCsv(entries: (Repeater | StaticChannel)[]): string {
       rows.push(toRow(entry, location++));
     }
   }
-  return buildCsv(HEADER, rows);
+  return buildCsvPlain(HEADER, rows);
 }
