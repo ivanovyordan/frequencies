@@ -3,6 +3,7 @@ import { useRepeaters } from './hooks/useRepeaters';
 import { useFilters } from './hooks/useFilters';
 import { useGeolocation } from './hooks/useGeolocation';
 import { useRadioId } from './hooks/useRadioId';
+import { useCustomChannels } from './hooks/useCustomChannels';
 import { applyFilters } from './services/filter';
 import { FilterPanel } from './components/FilterPanel/FilterPanel';
 import { ControlPanel } from './components/ControlPanel/ControlPanel';
@@ -14,10 +15,11 @@ function App() {
   const { filters, disabledKeys, software, onToggle, onSoftwareChange } = useFilters();
   const { coords, geoLoading, geoError, findMe, setCoords } = useGeolocation();
   const [radioId, setRadioId] = useRadioId();
+  const [customChannels, setCustomChannels] = useCustomChannels();
 
   const filteredEntries = useMemo(
-    () => applyFilters(repeaters, filters, coords),
-    [repeaters, filters, coords],
+    () => applyFilters(repeaters, filters, coords, customChannels),
+    [repeaters, filters, coords, customChannels],
   );
 
   return (
@@ -36,7 +38,13 @@ function App() {
       </header>
 
       <div className="grid grid-cols-[240px_1fr] flex-1 overflow-hidden">
-        <FilterPanel filters={filters} disabledKeys={disabledKeys} onToggle={onToggle} />
+        <FilterPanel
+          filters={filters}
+          disabledKeys={disabledKeys}
+          onToggle={onToggle}
+          customChannels={customChannels}
+          onCustomChannelsChange={setCustomChannels}
+        />
 
         <div className="flex flex-col overflow-hidden">
           <ControlPanel

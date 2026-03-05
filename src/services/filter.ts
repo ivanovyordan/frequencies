@@ -1,10 +1,30 @@
-import type { Repeater, StaticChannel, FilterState, Coordinates } from '../types/repeater';
+import type { CustomChannel, Repeater, StaticChannel, FilterState, Coordinates } from '../types/repeater';
 import { SIMPLEX_CHANNELS } from '../constants/simplex';
 import { PMR_CHANNELS } from '../constants/pmr';
 import { APRS_CHANNELS } from '../constants/aprs';
 import { haversineKm } from '../utils/geo';
 import { isNational, getNationalNum } from '../utils/national';
 
+
+function customToStaticChannel(ch: CustomChannel): StaticChannel {
+  const rx = Math.round(parseFloat(ch.rxMhz) * 1_000_000);
+  const tx = ch.txMhz ? Math.round(parseFloat(ch.txMhz) * 1_000_000) : rx;
+  return {
+    callsign: ch.name,
+    place: 'Потребителски',
+    pttProhibit: !ch.txMhz,
+    freq: { rx, tx, tone: ch.tone ? parseFloat(ch.tone) : 0, channel: ch.name },
+    modes: {
+      fm: { enabled: true },
+      dmr: { enabled: false, ts1_groups: '', ts2_groups: '', color_code: '', callid: '' },
+      dstar: { enabled: false },
+      fusion: { enabled: false },
+      nxdn: { enabled: false },
+      parrot: { enabled: false },
+      beacon: { enabled: false },
+    },
+  };
+}
 
 function hasUsableMode(r: Repeater): boolean {
   return r.modes.fm.enabled || r.modes.dmr.enabled;
@@ -57,6 +77,7 @@ export function applyFilters(
   repeaters: Repeater[],
   filters: FilterState,
   coords: Coordinates,
+  customChannels: CustomChannel[] = [],
 ): (Repeater | StaticChannel)[] {
   const active = repeaters.filter((r) => !r.disabled);
 
@@ -87,6 +108,9 @@ export function applyFilters(
 
   // Section 5 — APRS
   if (filters.aprs) result.push(...APRS_CHANNELS);
+
+  // Section 6 — Custom channels
+  if (filters.custom) result.push(...customChannels.map(customToStaticChannel));
 
   return result;
 }

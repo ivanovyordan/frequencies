@@ -19,6 +19,7 @@ interface Channel {
   ctcss: number;        // Hz, 0 = off
   category: ChannelCategory;
   place: string;
+  pttProhibit?: boolean;
   dmr?: {               // present only for DMR channels
     colorCode: number;
     slot: 1 | 2;
@@ -73,7 +74,8 @@ function fromEntry(entry: Repeater | StaticChannel): Channel[] {
 
   if (entry.modes.fm.enabled) {
     const name = channelName(entry).slice(0, 16);
-    channels.push({ name, rx, tx, ctcss: tone, category: categoryOf(entry), place: entry.place });
+    const pttProhibit = !isRepeater(entry) && entry.pttProhibit === true;
+    channels.push({ name, rx, tx, ctcss: tone, category: categoryOf(entry), place: entry.place, pttProhibit });
   }
 
   if ('disabled' in entry && entry.modes.dmr.enabled) {
@@ -186,7 +188,7 @@ function buildChannelCsv(channels: Channel[], radioName: string): string {
       'High', '25K', ct, ct, '',
       'Group Call', '0', radioName, 'Always', 'Carrier', 'Off',
       '1', '1', '1', 'Off', '0', '1',
-      'None', 'None', 'Off', 'Off', 'Off', 'Off',
+      'None', 'None', ch.pttProhibit ? 'On' : 'Off', 'Off', 'Off', 'Off',
       ...tail,
     ];
   });

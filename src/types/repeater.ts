@@ -57,6 +57,7 @@ export interface StaticChannel {
   place: string;
   freq: RepeaterFreq;
   modes: RepeaterModes;
+  pttProhibit?: boolean;
 }
 
 /** Type guard to distinguish repeaters from static channels. */
@@ -76,6 +77,15 @@ export interface FilterState {
   simplex: boolean;
   pmr: boolean;
   aprs: boolean;
+  custom: boolean;
+}
+
+export interface CustomChannel {
+  id: string;
+  name: string;   // ≤16 chars
+  rxMhz: string;  // e.g. "144.500"
+  txMhz: string;  // "" = same as RX (simplex)
+  tone: string;   // Hz, "" = off
 }
 
 export interface Coordinates {

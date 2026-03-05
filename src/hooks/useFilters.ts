@@ -13,6 +13,7 @@ const DEFAULT_FILTERS: FilterState = {
   simplex: false,
   pmr: false,
   aprs: false,
+  custom: false,
 };
 
 export interface UseFiltersResult {
