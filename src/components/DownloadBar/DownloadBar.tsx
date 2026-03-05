@@ -12,24 +12,16 @@ function chirpFmCount(entries: (Repeater | StaticChannel)[]): number {
 
 function totalExportable(entries: (Repeater | StaticChannel)[], software: SoftwareOption): number {
   if (software === 'chirp') return chirpFmCount(entries);
-  if (software === 'anytone') {
-    const { fm, dmr } = countAnytoneChannels(entries);
-    return fm + dmr;
-  }
-  return 0;
+  const { fm, dmr } = countAnytoneChannels(entries);
+  return fm + dmr;
 }
 
 // ── Info label ─────────────────────────────────────────────────────────────────
 
 function infoLabel(entries: (Repeater | StaticChannel)[], software: SoftwareOption): string {
-  if (software === 'chirp') {
-    return `${chirpFmCount(entries)} FM канала → Chirp`;
-  }
-  if (software === 'anytone') {
-    const { fm, dmr } = countAnytoneChannels(entries);
-    return dmr > 0 ? `${fm} FM + ${dmr} DMR → Anytone` : `${fm} FM → Anytone`;
-  }
-  return '';
+  if (software === 'chirp') return `${chirpFmCount(entries)} FM канала → Chirp`;
+  const { fm, dmr } = countAnytoneChannels(entries);
+  return dmr > 0 ? `${fm} FM + ${dmr} DMR → Anytone` : `${fm} FM → Anytone`;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -43,7 +35,7 @@ interface Props {
 export function DownloadBar({ software, entries, radioId }: Props) {
   const [downloading, setDownloading] = useState(false);
   const count = totalExportable(entries, software);
-  const disabled = software === 'none' || count === 0 || downloading;
+  const disabled = count === 0 || downloading;
 
   async function handleDownload() {
     if (software === 'chirp') {
@@ -51,22 +43,18 @@ export function DownloadBar({ software, entries, radioId }: Props) {
       download(blob, 'честоти-chirp.csv');
       return;
     }
-    if (software === 'anytone') {
-      setDownloading(true);
-      try {
-        const blob = await buildAnytoneZip(entries, radioId);
-        download(blob, 'честоти-anytone.zip');
-      } finally {
-        setDownloading(false);
-      }
+    setDownloading(true);
+    try {
+      const blob = await buildAnytoneZip(entries, radioId);
+      download(blob, 'честоти-anytone.zip');
+    } finally {
+      setDownloading(false);
     }
   }
 
   return (
     <footer className="h-16 bg-white border-t border-slate-200 flex items-center justify-center gap-4 px-5 shrink-0 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]">
-      {software !== 'none' && (
-        <span className="text-xs text-slate-500">{infoLabel(entries, software)}</span>
-      )}
+      <span className="text-xs text-slate-500">{infoLabel(entries, software)}</span>
       <button
         className="h-10 px-6 inline-flex items-center justify-center bg-blue-700 text-white text-sm font-medium rounded transition-colors hover:enabled:bg-blue-800 disabled:opacity-45 disabled:cursor-not-allowed"
         onClick={() => {

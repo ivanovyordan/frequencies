@@ -26,7 +26,7 @@ export interface UseFiltersResult {
 
 export function useFilters(): UseFiltersResult {
   const [filters, setFilters] = useLocalStorage<FilterState>('freq_filters', DEFAULT_FILTERS);
-  const [software, setSoftware] = useLocalStorage<SoftwareOption>('freq_software', 'none');
+  const [software, setSoftware] = useLocalStorage<SoftwareOption>('freq_software', 'chirp');
 
   const disabledKeys = useMemo<ReadonlySet<keyof FilterState>>(
     () => (software === 'chirp' ? new Set(CHIRP_DISABLED) : new Set()),

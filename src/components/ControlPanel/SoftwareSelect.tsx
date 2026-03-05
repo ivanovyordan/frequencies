@@ -17,7 +17,6 @@ export function SoftwareSelect({ value, onChange }: Props) {
         aria-label="Изберете CPS софтуер"
         className="h-8 w-36 px-2 border border-slate-200 rounded bg-white text-slate-800 text-[13px] outline-none cursor-pointer transition-colors focus:border-blue-700 focus:ring-[3px] focus:ring-blue-700/15"
       >
-        <option value="none">Изберете</option>
         <option value="chirp">Chirp</option>
         <option value="anytone">Anytone</option>
       </select>
