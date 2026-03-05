@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useRepeaters } from './hooks/useRepeaters';
 import { useFilters } from './hooks/useFilters';
 import { useGeolocation } from './hooks/useGeolocation';
+import { useRadioId } from './hooks/useRadioId';
 import { applyFilters } from './services/filter';
 import { FilterPanel } from './components/FilterPanel/FilterPanel';
 import { ControlPanel } from './components/ControlPanel/ControlPanel';
@@ -12,6 +13,7 @@ function App() {
   const { repeaters, loading, error } = useRepeaters();
   const { filters, disabledKeys, software, onToggle, onSoftwareChange } = useFilters();
   const { coords, geoLoading, geoError, findMe, setCoords } = useGeolocation();
+  const [radioId, setRadioId] = useRadioId();
 
   const filteredEntries = useMemo(
     () => applyFilters(repeaters, filters, coords),
@@ -45,6 +47,8 @@ function App() {
             geoError={geoError}
             software={software}
             onSoftwareChange={onSoftwareChange}
+            radioId={radioId}
+            onRadioIdChange={setRadioId}
           />
           <RepeaterTable
             entries={filteredEntries}
@@ -55,7 +59,7 @@ function App() {
         </div>
       </div>
 
-      <DownloadBar software={software} entries={filteredEntries} />
+      <DownloadBar software={software} entries={filteredEntries} radioId={radioId} />
     </div>
   );
 }

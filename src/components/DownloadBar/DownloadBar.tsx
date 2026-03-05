@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Repeater, StaticChannel, SoftwareOption } from '../../types/repeater';
+import type { RadioId, Repeater, StaticChannel, SoftwareOption } from '../../types/repeater';
 import { buildChirpCsv } from '../../services/chirpBuilder';
 import { buildAnytoneZip, countAnytoneChannels } from '../../services/anytoneBuilder';
 import { download } from '../../utils/download';
@@ -37,9 +37,10 @@ function infoLabel(entries: (Repeater | StaticChannel)[], software: SoftwareOpti
 interface Props {
   software: SoftwareOption;
   entries: (Repeater | StaticChannel)[];
+  radioId: RadioId;
 }
 
-export function DownloadBar({ software, entries }: Props) {
+export function DownloadBar({ software, entries, radioId }: Props) {
   const [downloading, setDownloading] = useState(false);
   const count = totalExportable(entries, software);
   const disabled = software === 'none' || count === 0 || downloading;
@@ -53,7 +54,7 @@ export function DownloadBar({ software, entries }: Props) {
     if (software === 'anytone') {
       setDownloading(true);
       try {
-        const blob = await buildAnytoneZip(entries);
+        const blob = await buildAnytoneZip(entries, radioId);
         download(blob, 'честоти-anytone.zip');
       } finally {
         setDownloading(false);

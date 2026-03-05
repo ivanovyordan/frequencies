@@ -83,3 +83,8 @@ export interface Coordinates {
   longitude: number | null;
 }
 
+export interface RadioId {
+  callsign: string; // e.g. "LZ9DB"
+  dmrId: string;    // numeric string, empty = not set
+}
+

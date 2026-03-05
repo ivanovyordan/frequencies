@@ -1,5 +1,6 @@
-import type { Coordinates, SoftwareOption } from '../../types/repeater';
+import type { Coordinates, RadioId, SoftwareOption } from '../../types/repeater';
 import { CoordinatesInput } from './CoordinatesInput';
+import { RadioIdInput } from './RadioIdInput';
 import { SoftwareSelect } from './SoftwareSelect';
 
 interface Props {
@@ -10,6 +11,8 @@ interface Props {
   geoError: string | null;
   software: SoftwareOption;
   onSoftwareChange: (v: SoftwareOption) => void;
+  radioId: RadioId;
+  onRadioIdChange: (r: RadioId) => void;
 }
 
 export function ControlPanel({
@@ -20,6 +23,8 @@ export function ControlPanel({
   geoError,
   software,
   onSoftwareChange,
+  radioId,
+  onRadioIdChange,
 }: Props) {
   return (
     <div className="bg-white border-b border-slate-200 px-5 py-4 flex flex-col gap-2">
@@ -31,6 +36,9 @@ export function ControlPanel({
           geoLoading={geoLoading}
         />
         <SoftwareSelect value={software} onChange={onSoftwareChange} />
+        {software === 'anytone' && (
+          <RadioIdInput radioId={radioId} onChange={onRadioIdChange} />
+        )}
       </div>
       {geoError && <p className="text-xs text-red-600">{geoError}</p>}
     </div>

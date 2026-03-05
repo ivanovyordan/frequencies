@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import type { Repeater, StaticChannel, RepeaterModeDMR } from '../types/repeater';
+import type { RadioId, Repeater, StaticChannel, RepeaterModeDMR } from '../types/repeater';
 import { isRepeater } from '../types/repeater';
 import { BG_DMR_TALKGROUPS } from '../constants/dmrTalkGroups';
 import { oblastForPlace } from '../constants/bgOblasts';
@@ -132,9 +132,16 @@ function mhz5(hz: number): string {
   return formatMhz(hz, 5);
 }
 
+// ── RadioIDList.CSV ────────────────────────────────────────────────────────────
+
+function buildRadioIdListCsv(radioId: RadioId): string {
+  const rows = [[1, parseInt(radioId.dmrId, 10), radioId.callsign]];
+  return buildCsv(['No.', 'Radio ID', 'Name'], rows);
+}
+
 // ── Channel.CSV ────────────────────────────────────────────────────────────────
 
-function buildChannelCsv(channels: Channel[]): string {
+function buildChannelCsv(channels: Channel[], radioName: string): string {
   // 56 columns matching AnyTone CPS export format
   const header = [
     'No.', 'Channel Name', 'Receive Frequency', 'Transmit Frequency', 'Channel Type',
@@ -166,7 +173,7 @@ function buildChannelCsv(channels: Channel[]): string {
       return [
         i + 1, ch.name, rxMhz, txMhz, 'D-Digital',
         'High', '12.5K', 'Off', 'Off', ch.dmr.tgName,
-        'Group Call', ch.dmr.tgId, 'Local', 'Always', 'Carrier', 'Off',
+        'Group Call', ch.dmr.tgId, radioName, 'Always', 'Carrier', 'Off',
         '1', '1', '1', 'Off', ch.dmr.colorCode, ch.dmr.slot,
         'None', 'None', 'Off', 'Off', 'Off', 'Off',
         ...tail,
@@ -177,7 +184,7 @@ function buildChannelCsv(channels: Channel[]): string {
     return [
       i + 1, ch.name, rxMhz, txMhz, 'Analog',
       'High', '25K', ct, ct, '',
-      'Group Call', '0', 'Local', 'Always', 'Carrier', 'Off',
+      'Group Call', '0', radioName, 'Always', 'Carrier', 'Off',
       '1', '1', '1', 'Off', '0', '1',
       'None', 'None', 'Off', 'Off', 'Off', 'Off',
       ...tail,
@@ -333,15 +340,22 @@ export function countAnytoneChannels(entries: (Repeater | StaticChannel)[]): {
 /** Build a ZIP Blob containing the AnyTone CPS import files. */
 export async function buildAnytoneZip(
   entries: (Repeater | StaticChannel)[],
+  radioId: RadioId = { callsign: '', dmrId: '' },
 ): Promise<Blob> {
   const channels = collectChannels(entries);
+  const radioName = radioId.callsign.trim() || 'Local';
 
   const zip = new JSZip();
-  zip.file('Channel.CSV', buildChannelCsv(channels));
+  zip.file('Channel.CSV', buildChannelCsv(channels, radioName));
   zip.file('TalkGroups.CSV', buildTalkGroupCsv(channels));
   zip.file('Zone.CSV', buildZoneCsv(channels));
   zip.file('ScanList.CSV', buildScanListCsv(channels));
   zip.file('anytone.LST', buildLst());
+
+  const dmrIdNum = parseInt(radioId.dmrId, 10);
+  if (radioId.callsign.trim() && !isNaN(dmrIdNum) && dmrIdNum > 0) {
+    zip.file('RadioIDList.CSV', buildRadioIdListCsv({ callsign: radioName, dmrId: radioId.dmrId }));
+  }
 
   return zip.generateAsync({ type: 'blob' });
 }
