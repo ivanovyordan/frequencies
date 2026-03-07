@@ -71,12 +71,15 @@ function dmrChName(callsign: string, tgId: number): string {
 /** Expand one API entry into its Channel(s): one analog + one per talk group. */
 function fromEntry(entry: Repeater | StaticChannel): Channel[] {
   const channels: Channel[] = [];
-  const { rx, tx, tone } = entry.freq;
+  // API naming is from the repeater's perspective:
+  //   freq.rx = repeater input  = our TX
+  //   freq.tx = repeater output = our RX
+  const { rx: ourTx, tx: ourRx, tone } = entry.freq;
 
   if (entry.modes.fm.enabled) {
     const name = channelName(entry).slice(0, 16);
     const pttProhibit = !isRepeater(entry) && entry.pttProhibit === true;
-    channels.push({ name, rx, tx, ctcss: tone, category: categoryOf(entry), place: entry.place, pttProhibit });
+    channels.push({ name, rx: ourRx, tx: ourTx, ctcss: tone, category: categoryOf(entry), place: entry.place, pttProhibit });
   }
 
   if ('disabled' in entry && entry.modes.dmr.enabled) {
@@ -85,7 +88,7 @@ function fromEntry(entry: Repeater | StaticChannel): Channel[] {
       const { ts1_groups, ts2_groups } = entry.modes.dmr;
       const makeDmrCh = (id: number, slot: 1 | 2): Channel => ({
         name: dmrChName(entry.callsign, id),
-        rx, tx, ctcss: 0,
+        rx: ourRx, tx: ourTx, ctcss: 0,
         category: 'local',
         place: entry.place,
         dmr: { colorCode: cc, slot, tgId: id, tgName: tgLabel(id) },
