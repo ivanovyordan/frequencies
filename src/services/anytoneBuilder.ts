@@ -247,10 +247,10 @@ function buildZoneCsv(channels: Channel[]): string {
   const custom = channels.filter((ch) => ch.category === 'custom');
 
   addZone('All Channels', channels);
-  addZone('Nationals', nationals);
+  addZone('National Repeaters', nationals);
   addZone('Local Repeaters', locals);
-  addZone('All Analog', [...nationals, ...locals]);
-  addZone('All DMR', dmr);
+  addZone('Analog Repeaters', [...nationals, ...locals]);
+  addZone('DMR Repeaters', dmr);
   addZone('Simplex', simplex);
   addZone('PMR', pmr);
   addZone('Custom', custom);
