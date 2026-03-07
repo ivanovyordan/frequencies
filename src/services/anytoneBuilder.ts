@@ -10,7 +10,7 @@ import { isNational } from '../utils/national';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type ChannelCategory = 'national' | 'local' | 'simplex' | 'pmr';
+type ChannelCategory = 'national' | 'local' | 'simplex' | 'pmr' | 'custom';
 
 interface Channel {
   name: string;         // ≤16 chars, unique across the export
@@ -56,6 +56,7 @@ function parseColorCode(dmr: RepeaterModeDMR): number | null {
 
 function categoryOf(entry: Repeater | StaticChannel): ChannelCategory {
   if (!isRepeater(entry)) {
+    if (entry.place === 'Потребителски') return 'custom';
     return entry.callsign.startsWith('PMR') ? 'pmr' : 'simplex';
   }
   return isNational(entry) ? 'national' : 'local';
@@ -243,13 +244,16 @@ function buildZoneCsv(channels: Channel[]): string {
   const dmr = channels.filter((ch) => !!ch.dmr);
   const simplex = channels.filter((ch) => ch.category === 'simplex');
   const pmr = channels.filter((ch) => ch.category === 'pmr');
+  const custom = channels.filter((ch) => ch.category === 'custom');
 
+  addZone('All Channels', channels);
   addZone('Nationals', nationals);
   addZone('Local Repeaters', locals);
   addZone('All Analog', [...nationals, ...locals]);
   addZone('All DMR', dmr);
   addZone('Simplex', simplex);
   addZone('PMR', pmr);
+  addZone('Custom', custom);
 
   const byOblast = groupBy([...nationals, ...locals], (ch) => oblastForPlace(ch.place));
   for (const [oblast, members] of byOblast) {
