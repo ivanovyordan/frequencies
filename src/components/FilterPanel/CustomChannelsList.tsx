@@ -20,6 +20,10 @@ export function CustomChannelsList({ channels, onChange }: Props) {
   const rxNum = parseFloat(rxMhz);
   const canAdd = name.trim().length > 0 && !isNaN(rxNum) && rxNum > 0;
 
+  function toggle(id: string) {
+    onChange(channels.map((c) => c.id === id ? { ...c, enabled: !c.enabled } : c));
+  }
+
   function add() {
     if (!canAdd) return;
     onChange([
@@ -30,6 +34,7 @@ export function CustomChannelsList({ channels, onChange }: Props) {
         rxMhz: rxMhz.trim(),
         txMhz: txMhz.trim(),
         tone: tone.trim(),
+        enabled: true,
       },
     ]);
     setName('');
@@ -48,7 +53,14 @@ export function CustomChannelsList({ channels, onChange }: Props) {
         const isDuplex = ch.txMhz && ch.txMhz !== ch.rxMhz;
         return (
           <div key={ch.id} className="flex items-center gap-1 px-1.5 py-1 rounded hover:bg-slate-50 group">
-            <span className="text-[12px] font-medium text-slate-700 truncate flex-1">{ch.name}</span>
+            <input
+              type="checkbox"
+              checked={ch.enabled !== false}
+              onChange={() => toggle(ch.id)}
+              aria-label={`Включи ${ch.name}`}
+              className="shrink-0 accent-blue-700"
+            />
+            <span className={`text-[12px] font-medium truncate flex-1 ${ch.enabled !== false ? 'text-slate-700' : 'text-slate-400'}`}>{ch.name}</span>
             <span className="text-[11px] text-slate-400 shrink-0">
               {ch.rxMhz}{isDuplex ? `↑${ch.txMhz}` : ''}
             </span>

@@ -109,8 +109,10 @@ export function applyFilters(
   // Section 5 — APRS
   if (filters.aprs) result.push(...APRS_CHANNELS);
 
-  // Section 6 — Custom channels
-  if (filters.custom) result.push(...customChannels.map(customToStaticChannel));
+  // Section 6 — Custom channels (only those individually enabled)
+  if (filters.custom) {
+    result.push(...customChannels.filter((ch) => ch.enabled !== false).map(customToStaticChannel));
+  }
 
   return result;
 }

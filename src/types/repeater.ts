@@ -82,10 +82,11 @@ export interface FilterState {
 
 export interface CustomChannel {
   id: string;
-  name: string;   // ≤16 chars
-  rxMhz: string;  // e.g. "144.500"
-  txMhz: string;  // "" = same as RX (simplex)
-  tone: string;   // Hz, "" = off
+  name: string;    // ≤16 chars
+  rxMhz: string;   // e.g. "144.500"
+  txMhz: string;   // "" = same as RX (simplex)
+  tone: string;    // Hz, "" = off
+  enabled: boolean;
 }
 
 export interface Coordinates {
