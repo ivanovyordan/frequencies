@@ -47,7 +47,7 @@ function toRow(entry: Repeater | StaticChannel, location: number): (string | num
     'NN',
     'FM',
     25,
-    '',
+    entry.place === 'PMR446' ? 'S' : '',
     `${channel} ${place}`.trim(),
     '', '', '', '',
   ];
