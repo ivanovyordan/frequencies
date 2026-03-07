@@ -9,14 +9,23 @@ import { isNational, getNationalNum } from '../utils/national';
 function customToStaticChannel(ch: CustomChannel): StaticChannel {
   const rx = Math.round(parseFloat(ch.rxMhz) * 1_000_000);
   const tx = ch.txMhz ? Math.round(parseFloat(ch.txMhz) * 1_000_000) : rx;
+  const isDmr = !!ch.dmr;
   return {
     callsign: ch.name,
     place: 'Потребителски',
-    pttProhibit: !ch.txMhz,
+    pttProhibit: !ch.txMhz && !isDmr,
     freq: { rx, tx, tone: ch.tone ? parseFloat(ch.tone) : 0, channel: ch.name },
     modes: {
-      fm: { enabled: true },
-      dmr: { enabled: false, ts1_groups: '', ts2_groups: '', color_code: '', callid: '' },
+      fm: { enabled: !isDmr },
+      dmr: isDmr
+        ? {
+            enabled: true,
+            ts1_groups: ch.dmr!.slot === '1' ? ch.dmr!.talkgroups : '',
+            ts2_groups: ch.dmr!.slot === '2' ? ch.dmr!.talkgroups : '',
+            color_code: ch.dmr!.colorCode,
+            callid: '',
+          }
+        : { enabled: false, ts1_groups: '', ts2_groups: '', color_code: '', callid: '' },
       dstar: { enabled: false },
       fusion: { enabled: false },
       nxdn: { enabled: false },

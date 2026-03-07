@@ -82,14 +82,14 @@ function fromEntry(entry: Repeater | StaticChannel): Channel[] {
     channels.push({ name, rx: ourRx, tx: ourTx, ctcss: tone, category: categoryOf(entry), place: entry.place, pttProhibit });
   }
 
-  if ('disabled' in entry && entry.modes.dmr.enabled) {
+  if (entry.modes.dmr.enabled) {
     const cc = parseColorCode(entry.modes.dmr);
     if (cc !== null) {
       const { ts1_groups, ts2_groups } = entry.modes.dmr;
       const makeDmrCh = (id: number, slot: 1 | 2): Channel => ({
         name: dmrChName(entry.callsign, id),
         rx: ourRx, tx: ourTx, ctcss: 0,
-        category: 'local',
+        category: categoryOf(entry),
         place: entry.place,
         dmr: { colorCode: cc, slot, tgId: id, tgName: tgLabel(id) },
       });

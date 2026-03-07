@@ -80,13 +80,20 @@ export interface FilterState {
   custom: boolean;
 }
 
+export interface CustomChannelDMR {
+  colorCode: string;   // e.g. "1"
+  slot: '1' | '2';
+  talkgroups: string;  // comma-separated TG IDs
+}
+
 export interface CustomChannel {
   id: string;
   name: string;    // ≤16 chars
   rxMhz: string;   // e.g. "144.500"
   txMhz: string;   // "" = same as RX (simplex)
-  tone: string;    // Hz, "" = off
+  tone: string;    // Hz, "" = off (ignored for DMR)
   enabled: boolean;
+  dmr?: CustomChannelDMR;
 }
 
 export interface Coordinates {
