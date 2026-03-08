@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import type { RadioId, Repeater, StaticChannel, RepeaterModeDMR } from '../types/repeater';
 import { isRepeater } from '../types/repeater';
-import { BG_DMR_TALKGROUPS } from '../constants/dmrTalkGroups';
+import { BG_DMR_TALKGROUPS, BG_DMR_PRIVATE_CALLS } from '../constants/dmrTalkGroups';
 import { oblastForPlace } from '../constants/bgOblasts';
 import { channelName } from '../utils/channelName';
 import { buildCsv } from '../utils/csv';
@@ -25,6 +25,7 @@ interface Channel {
     slot: 1 | 2;
     tgId: number;
     tgName: string;
+    mixedMode: boolean; // true = repeater also has FM → D+A TX D, false → DMR
   };
 }
 
@@ -38,18 +39,19 @@ function tgLabel(id: number): string {
 }
 
 /** Parse a comma-separated string of TG IDs into an array of numbers. */
-function parseTgIds(s: string): number[] {
+function parseTgIds(s: string | undefined): number[] {
+  if (!s) return [];
   return s
     .split(',')
     .map((t) => parseInt(t.trim(), 10))
     .filter((n) => !isNaN(n) && n > 0);
 }
 
-/** Parse color_code string; returns null if missing or not a valid integer. */
-function parseColorCode(dmr: RepeaterModeDMR): number | null {
-  if (!dmr.color_code) return null;
+/** Parse color_code string; returns 1 (default) if missing or invalid. */
+function parseColorCode(dmr: RepeaterModeDMR): number {
+  if (!dmr.color_code) return 1;
   const cc = parseInt(dmr.color_code, 10);
-  return isNaN(cc) ? null : cc;
+  return isNaN(cc) ? 1 : cc;
 }
 
 // ── Channel collection ─────────────────────────────────────────────────────────
@@ -84,18 +86,17 @@ function fromEntry(entry: Repeater | StaticChannel): Channel[] {
 
   if (entry.modes.dmr.enabled) {
     const cc = parseColorCode(entry.modes.dmr);
-    if (cc !== null) {
-      const { ts1_groups, ts2_groups } = entry.modes.dmr;
-      const makeDmrCh = (id: number, slot: 1 | 2): Channel => ({
-        name: dmrChName(entry.callsign, id),
-        rx: ourRx, tx: ourTx, ctcss: 0,
-        category: categoryOf(entry),
-        place: entry.place,
-        dmr: { colorCode: cc, slot, tgId: id, tgName: tgLabel(id) },
-      });
-      parseTgIds(ts1_groups).forEach((id) => channels.push(makeDmrCh(id, 1)));
-      parseTgIds(ts2_groups).forEach((id) => channels.push(makeDmrCh(id, 2)));
-    }
+    const mixedMode = entry.modes.fm.enabled;
+    const { ts1_groups, ts2_groups } = entry.modes.dmr;
+    const makeDmrCh = (id: number, slot: 1 | 2): Channel => ({
+      name: dmrChName(entry.callsign, id),
+      rx: ourRx, tx: ourTx, ctcss: 0,
+      category: categoryOf(entry),
+      place: entry.place,
+      dmr: { colorCode: cc, slot, tgId: id, tgName: tgLabel(id), mixedMode },
+    });
+    parseTgIds(ts1_groups).forEach((id) => channels.push(makeDmrCh(id, 1)));
+    parseTgIds(ts2_groups).forEach((id) => channels.push(makeDmrCh(id, 2)));
   }
 
   return channels;
@@ -176,10 +177,11 @@ function buildChannelCsv(channels: Channel[], radioName: string): string {
     const txMhz = mhz5(ch.tx);
 
     if (ch.dmr) {
+      const chType = ch.dmr.mixedMode ? 'D+A TX D' : 'DMR';
       return [
-        i + 1, ch.name, rxMhz, txMhz, 'D-Digital',
+        i + 1, ch.name, rxMhz, txMhz, chType,
         'High', '12.5K', 'Off', 'Off', ch.dmr.tgName,
-        'Group Call', ch.dmr.tgId, radioName, 'Always', 'Carrier', 'Off',
+        'Group Call', ch.dmr.tgId, radioName, 'Off', 'Carrier', 'Off',
         '1', '1', '1', 'Off', ch.dmr.colorCode, ch.dmr.slot,
         'None', 'None', 'Off', 'Off', 'Off', 'Off',
         ...tail,
@@ -187,11 +189,12 @@ function buildChannelCsv(channels: Channel[], radioName: string): string {
     }
 
     const ct = ctcssTone(ch.ctcss);
+    const power = ch.category === 'pmr' ? 'Low' : 'High';
     return [
       i + 1, ch.name, rxMhz, txMhz, 'A-Analog',
-      'High', '25K', ct, ct, '',
-      'Group Call', '0', radioName, 'Always', 'Carrier', 'Off',
-      '1', '1', '1', 'Off', '0', '1',
+      power, '12.5K', ct, ct, 'Local',
+      'Group Call', '1', radioName, 'Off', 'Carrier', 'Off',
+      '1', '1', '1', 'Off', '1', '1',
       'None', 'None', ch.pttProhibit ? 'On' : 'Off', 'Off', 'Off', 'Off',
       ...tail,
     ];
@@ -210,6 +213,12 @@ function buildTalkGroupCsv(channels: Channel[]): string {
     if (!ch.dmr || seen.has(ch.dmr.tgId)) continue;
     seen.add(ch.dmr.tgId);
     rows.push([no++, ch.dmr.tgId, ch.dmr.tgName, 'Group Call', 'None']);
+  }
+  // Always include standard private-call service IDs (Parrot, APRS, etc.)
+  for (const [id, name] of BG_DMR_PRIVATE_CALLS) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    rows.push([no++, id, name, 'Private Call', 'None']);
   }
   return buildCsv(['No.', 'Radio ID', 'Name', 'Call Type', 'Call Alert'], rows);
 }

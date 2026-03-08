@@ -17,6 +17,16 @@ export const BG_DMR_TALKGROUPS: ReadonlyMap<number, string> = new Map([
   [28430, 'BG-LZ0PLD'],
   [284112, 'BG-Emergency'],
   [284359, 'BG-XLX359B'],
-  [284997, 'BG-Parrot'],
-  [284999, 'BG-APRS'],
+]);
+
+/**
+ * BrandMeister private-call service IDs for Bulgaria.
+ * Always included in TalkGroups.CSV as Private Call entries so the user
+ * can access them from the contact list without needing a dedicated channel.
+ */
+export const BG_DMR_PRIVATE_CALLS: ReadonlyMap<number, string> = new Map([
+  [284990, 'SMS Test'],
+  [284991, 'Repeater Info'],
+  [284997, 'Parrot'],
+  [284999, 'APRS'],
 ]);
