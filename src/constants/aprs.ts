@@ -1,19 +1,28 @@
-import type { StaticChannel } from '../types/repeater';
+import type { StaticChannel, RepeaterModes } from '../types/repeater';
+
+const APRS_MODES: RepeaterModes = {
+  fm: { enabled: true },
+  dmr: { enabled: false, ts1_groups: '', ts2_groups: '', color_code: '', callid: '' },
+  dstar: { enabled: false },
+  fusion: { enabled: false },
+  nxdn: { enabled: false },
+  parrot: { enabled: false },
+  beacon: { enabled: false },
+};
+
+function makeAprs(name: string, freqMhz: number, ctcssTone = 0): StaticChannel {
+  const hz = Math.round(freqMhz * 1_000_000);
+  return {
+    callsign: name,
+    place: 'APRS',
+    freq: { rx: hz, tx: hz, tone: ctcssTone, channel: name },
+    modes: APRS_MODES,
+  };
+}
 
 // Standard European APRS frequencies (IARU Region 1)
 export const APRS_CHANNELS: StaticChannel[] = [
-  {
-    callsign: 'APRS',
-    place: 'APRS',
-    freq: { rx: 144_800_000, tx: 144_800_000, tone: 0, channel: 'APRS' },
-    modes: {
-      fm: { enabled: true },
-      dmr: { enabled: false, ts1_groups: '', ts2_groups: '', color_code: '', callid: '' },
-      dstar: { enabled: false },
-      fusion: { enabled: false },
-      nxdn: { enabled: false },
-      parrot: { enabled: false },
-      beacon: { enabled: false },
-    },
-  },
+  makeAprs('APRS',     144.800, 123.0), // VHF primary (EU/AF), voice alert CTCSS
+  makeAprs('APRS ISS', 145.825),        // ISS / satellite
+  makeAprs('APRS UHF', 432.500),        // UHF packet
 ];

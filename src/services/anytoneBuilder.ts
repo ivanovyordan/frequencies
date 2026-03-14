@@ -1,7 +1,6 @@
 import JSZip from 'jszip';
 import type { RadioId, Repeater, StaticChannel, RepeaterModeDMR } from '../types/repeater';
 import { isRepeater } from '../types/repeater';
-import { BG_DMR_TALKGROUPS, BG_DMR_PRIVATE_CALLS } from '../constants/dmrTalkGroups';
 import { oblastForPlace } from '../constants/bgOblasts';
 import { channelName } from '../utils/channelName';
 import { buildCsv } from '../utils/csv';
@@ -10,7 +9,7 @@ import { isNational } from '../utils/national';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type ChannelCategory = 'national' | 'local' | 'simplex' | 'pmr' | 'custom';
+type ChannelCategory = 'national' | 'local' | 'simplex' | 'pmr' | 'custom' | 'aprs';
 
 interface Channel {
   name: string;         // ≤16 chars, unique across the export
@@ -20,31 +19,15 @@ interface Channel {
   category: ChannelCategory;
   place: string;
   pttProhibit?: boolean;
-  dmr?: {               // present only for DMR channels
+  dmr?: {
     colorCode: number;
     slot: 1 | 2;
-    tgId: number;
-    tgName: string;
-    mixedMode: boolean; // true = repeater also has FM → D+A TX D, false → DMR
+    mixedMode: boolean;
   };
 }
 
 function ctcssTone(hz: number): string {
   return hz > 0 ? hz.toFixed(1) : 'Off';
-}
-
-/** Human-readable TG name; falls back to "TG{id}" for unknown IDs. */
-function tgLabel(id: number): string {
-  return BG_DMR_TALKGROUPS.get(id) ?? `TG${id}`;
-}
-
-/** Parse a comma-separated string of TG IDs into an array of numbers. */
-function parseTgIds(s: string | undefined): number[] {
-  if (!s) return [];
-  return s
-    .split(',')
-    .map((t) => parseInt(t.trim(), 10))
-    .filter((n) => !isNaN(n) && n > 0);
 }
 
 /** Parse color_code string; returns 1 (default) if missing or invalid. */
@@ -59,18 +42,13 @@ function parseColorCode(dmr: RepeaterModeDMR): number {
 function categoryOf(entry: Repeater | StaticChannel): ChannelCategory {
   if (!isRepeater(entry)) {
     if (entry.place === 'Потребителски') return 'custom';
+    if (entry.place === 'APRS') return 'aprs';
     return entry.callsign.startsWith('PMR') ? 'pmr' : 'simplex';
   }
   return isNational(entry) ? 'national' : 'local';
 }
 
-/** DMR channel name: always preserve the full TG ID; truncate only the callsign. */
-function dmrChName(callsign: string, tgId: number): string {
-  const suffix = ` ${tgId}`;
-  return `${callsign.slice(0, 16 - suffix.length)}${suffix}`;
-}
-
-/** Expand one API entry into its Channel(s): one analog + one per talk group. */
+/** Expand one API entry into its Channel(s). */
 function fromEntry(entry: Repeater | StaticChannel): Channel[] {
   const channels: Channel[] = [];
   // API naming is from the repeater's perspective:
@@ -78,49 +56,46 @@ function fromEntry(entry: Repeater | StaticChannel): Channel[] {
   //   freq.tx = repeater output = our RX
   const { rx: ourTx, tx: ourRx, tone } = entry.freq;
 
-  if (entry.modes.fm.enabled) {
+  const hasFm = entry.modes.fm.enabled;
+  const hasDmr = entry.modes.dmr.enabled;
+
+  if (hasFm && hasDmr) {
+    const cc = parseColorCode(entry.modes.dmr);
+    const name = channelName(entry).slice(0, 16);
+    channels.push({
+      name, rx: ourRx, tx: ourTx, ctcss: tone,
+      category: categoryOf(entry), place: entry.place,
+      dmr: { colorCode: cc, slot: 1, mixedMode: true },
+    });
+  } else if (hasFm) {
     const name = channelName(entry).slice(0, 16);
     const pttProhibit = !isRepeater(entry) && entry.pttProhibit === true;
     channels.push({ name, rx: ourRx, tx: ourTx, ctcss: tone, category: categoryOf(entry), place: entry.place, pttProhibit });
-  }
-
-  if (entry.modes.dmr.enabled) {
+  } else if (hasDmr) {
     const cc = parseColorCode(entry.modes.dmr);
-    const mixedMode = entry.modes.fm.enabled;
-    const { ts1_groups, ts2_groups } = entry.modes.dmr;
-    const makeDmrCh = (id: number, slot: 1 | 2): Channel => ({
-      name: dmrChName(entry.callsign, id),
-      rx: ourRx, tx: ourTx, ctcss: 0,
-      category: categoryOf(entry),
-      place: entry.place,
-      dmr: { colorCode: cc, slot, tgId: id, tgName: tgLabel(id), mixedMode },
+    const name = channelName(entry).slice(0, 16);
+    channels.push({
+      name, rx: ourRx, tx: ourTx, ctcss: 0,
+      category: categoryOf(entry), place: entry.place,
+      dmr: { colorCode: cc, slot: 1, mixedMode: false },
     });
-    parseTgIds(ts1_groups).forEach((id) => channels.push(makeDmrCh(id, 1)));
-    parseTgIds(ts2_groups).forEach((id) => channels.push(makeDmrCh(id, 2)));
   }
 
   return channels;
 }
 
-/**
- * Build the full deduplicated channel list from all entries.
- * Analog channels come first (preserves radio memory convention), then DMR.
- * First occurrence wins when names collide.
- */
+/** Build the full deduplicated channel list; first occurrence wins on name collision. */
 function collectChannels(entries: (Repeater | StaticChannel)[]): Channel[] {
   const seen = new Set<string>();
-  const analogs: Channel[] = [];
-  const dmr: Channel[] = [];
-
+  const channels: Channel[] = [];
   for (const entry of entries) {
     for (const ch of fromEntry(entry)) {
       if (seen.has(ch.name)) continue;
       seen.add(ch.name);
-      (ch.dmr ? dmr : analogs).push(ch);
+      channels.push(ch);
     }
   }
-
-  return [...analogs, ...dmr];
+  return channels;
 }
 
 // ── Helpers shared by zone + scan list ─────────────────────────────────────────
@@ -149,49 +124,46 @@ function buildRadioIdListCsv(radioId: RadioId): string {
 // ── Channel.CSV ────────────────────────────────────────────────────────────────
 
 function buildChannelCsv(channels: Channel[], radioName: string): string {
-  // 56 columns matching AnyTone CPS export format
+  // 55 columns matching AnyTone CPS export format
   const header = [
     'No.', 'Channel Name', 'Receive Frequency', 'Transmit Frequency', 'Channel Type',
     'Transmit Power', 'Band Width', 'CTCSS/DCS Decode', 'CTCSS/DCS Encode', 'Contact',
     'Contact Call Type', 'Contact TG/DMR ID', 'Radio ID', 'Busy Lock/TX Permit', 'Squelch Mode',
     'Optional Signal', 'DTMF ID', '2Tone ID', '5Tone ID', 'PTT ID',
-    'RX Color Code', 'Slot', 'Scan List', 'Receive Group List', 'PTT Prohibit',
+    'Color Code', 'Slot', 'Scan List', 'Receive Group List', 'PTT Prohibit',
     'Reverse', 'Simplex TDMA', 'Slot Suit', 'AES Digital Encryption', 'Digital Encryption',
     'Call Confirmation', 'Talk Around(Simplex)', 'Work Alone', 'Custom CTCSS', '2TONE Decode',
     'Ranging', 'Through Mode', 'APRS RX', 'Analog APRS PTT Mode', 'Digital APRS PTT Mode',
     'APRS Report Type', 'Digital APRS Report Channel', 'Correct Frequency[Hz]', 'SMS Confirmation',
     'Exclude channel from roaming', 'DMR MODE', 'DataACK Disable', 'R5toneBot', 'R5ToneEot',
     'Auto Scan', 'Ana Aprs Mute', 'Send Talker Alias', 'AnaAprsTxPath', 'ARC4',
-    'ex_emg_kind', 'TxCC',
+    'ex_emg_kind',
   ];
 
-  // Trailing 28 columns that are the same for every channel
+  // Trailing 27 columns that are the same for every channel
   const tail = [
-    'Normal Encryption', 'Off', 'Off', 'Off', 'Off', '251.1', '0',
-    'Off', 'Off', 'Off', 'Off', 'Off', 'Off', '1', '0', 'Off',
-    '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1',
+    'Normal Encryption', 'Off', 'Off', 'Off', 'Off', '251.1', '1',
+    'Off', 'On', 'Off', 'Off', 'Off', 'Off', '1', '0', 'Off',
+    '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
   ];
 
   const rows = channels.map((ch, i) => {
-    const rxMhz = mhz5(ch.rx);
-    const txMhz = mhz5(ch.tx);
-
     if (ch.dmr) {
-      const chType = ch.dmr.mixedMode ? 'D+A TX D' : 'DMR';
+      const chType = ch.dmr.mixedMode ? 'D+A TX D' : 'D-Digital';
+      const ct = ctcssTone(ch.ctcss);
       return [
-        i + 1, ch.name, rxMhz, txMhz, chType,
-        'High', '12.5K', 'Off', 'Off', ch.dmr.tgName,
-        'Group Call', ch.dmr.tgId, radioName, 'Off', 'Carrier', 'Off',
+        i + 1, ch.name, mhz5(ch.rx), mhz5(ch.tx), chType,
+        'High', '12.5K', ct, ct, 'Local',
+        'Group Call', '1', radioName, 'Always', 'Carrier', 'Off',
         '1', '1', '1', 'Off', ch.dmr.colorCode, ch.dmr.slot,
         'None', 'None', 'Off', 'Off', 'Off', 'Off',
         ...tail,
       ];
     }
-
     const ct = ctcssTone(ch.ctcss);
     const power = ch.category === 'pmr' ? 'Low' : 'High';
     return [
-      i + 1, ch.name, rxMhz, txMhz, 'A-Analog',
+      i + 1, ch.name, mhz5(ch.rx), mhz5(ch.tx), 'A-Analog',
       power, '12.5K', ct, ct, 'Local',
       'Group Call', '1', radioName, 'Off', 'Carrier', 'Off',
       '1', '1', '1', 'Off', '1', '1',
@@ -205,21 +177,26 @@ function buildChannelCsv(channels: Channel[], radioName: string): string {
 
 // ── TalkGroups.CSV ─────────────────────────────────────────────────────────────
 
-function buildTalkGroupCsv(channels: Channel[]): string {
-  const seen = new Set<number>();
-  const rows: (string | number)[][] = [];
-  let no = 1;
-  for (const ch of channels) {
-    if (!ch.dmr || seen.has(ch.dmr.tgId)) continue;
-    seen.add(ch.dmr.tgId);
-    rows.push([no++, ch.dmr.tgId, ch.dmr.tgName, 'Group Call', 'None']);
-  }
-  // Always include standard private-call service IDs (Parrot, APRS, etc.)
-  for (const [id, name] of BG_DMR_PRIVATE_CALLS) {
-    if (seen.has(id)) continue;
-    seen.add(id);
-    rows.push([no++, id, name, 'Private Call', 'None']);
-  }
+function buildTalkGroupCsv(): string {
+  const rows: (string | number)[][] = [
+    [1,   1,      'Local',         'Group Call',   'None'],
+    [2,   2,      'Cluster',       'Group Call',   'None'],
+    [3,   8,      'Regional',      'Group Call',   'None'],
+    [4,   9,      'Local',         'Group Call',   'None'],
+    [5,   91,     'World-Wide',    'Group Call',   'None'],
+    [6,   92,     'Europe',        'Group Call',   'None'],
+    [7,   284,    'Bulgaria',      'Group Call',   'None'],
+    [8,   2840,   'Bulgaria Test', 'Group Call',   'None'],
+    [9,   2842,   'Sofia',         'Group Call',   'None'],
+    [10,  2843,   'Plovdiv',       'Group Call',   'None'],
+    [11,  28430,  'LZ0PLD',        'Group Call',   'None'],
+    [12,  284112, 'BG Disaster',   'Group Call',   'None'],
+    [13,  284359, 'XLX-359',       'Group Call',   'None'],
+    [14,  284990, 'SMS Test',      'Private Call', 'None'],
+    [15,  284991, 'Repeater Info', 'Private Call', 'None'],
+    [16,  284997, 'Parrot',        'Private Call', 'None'],
+    [17,  284999, 'APRS',          'Private Call', 'None'],
+  ];
   return buildCsv(['No.', 'Radio ID', 'Name', 'Call Type', 'Call Alert'], rows);
 }
 
@@ -251,11 +228,12 @@ function buildZoneCsv(channels: Channel[]): string {
     ]);
   }
 
-  const nationals = channels.filter((ch) => ch.category === 'national');
+  const nationals = channels.filter((ch) => ch.category === 'national' && !ch.dmr);
   const locals = channels.filter((ch) => ch.category === 'local' && !ch.dmr);
   const dmr = channels.filter((ch) => !!ch.dmr);
   const simplex = channels.filter((ch) => ch.category === 'simplex');
   const pmr = channels.filter((ch) => ch.category === 'pmr');
+  const aprs = channels.filter((ch) => ch.category === 'aprs');
   const custom = channels.filter((ch) => ch.category === 'custom');
 
   addZone('All Channels', channels);
@@ -263,47 +241,16 @@ function buildZoneCsv(channels: Channel[]): string {
   addZone('Local Repeaters', locals);
   addZone('Analog Repeaters', [...nationals, ...locals]);
   addZone('DMR Repeaters', dmr);
-  addZone('Simplex', simplex);
-  addZone('PMR', pmr);
-  addZone('Custom', custom);
 
   const byOblast = groupBy([...nationals, ...locals], (ch) => oblastForPlace(ch.place));
   for (const [oblast, members] of byOblast) {
     addZone(oblast.slice(0, 16), members);
   }
 
-  return buildCsv(header, rows);
-}
-
-// ── ScanList.CSV ───────────────────────────────────────────────────────────────
-
-function buildScanListCsv(channels: Channel[]): string {
-  const header = [
-    'No.', 'Scan List Name', 'Scan Channel Member',
-    'Scan Channel Member RX Frequency', 'Scan Channel Member TX Frequency',
-    'Scan Mode', 'Priority Channel Select',
-    'Priority Channel 1', 'Priority Channel 1 RX Frequency', 'Priority Channel 1 TX Frequency',
-    'Priority Channel 2', 'Priority Channel 2 RX Frequency', 'Priority Channel 2 TX Frequency',
-    'Revert Channel', 'Look Back Time A[s]', 'Look Back Time B[s]',
-    'Dropout Delay Time[s]', 'Dwell Time[s]',
-  ];
-
-  const rows: (string | number)[][] = [];
-  let no = 1;
-
-  const byTg = groupBy(channels.filter((ch) => !!ch.dmr), (ch) => ch.dmr!.tgId);
-  for (const [tgId, tgChs] of byTg) {
-    rows.push([
-      no++, tgLabel(tgId),
-      tgChs.map((c) => c.name).join('|'),
-      tgChs.map((c) => mhz5(c.rx)).join('|'),
-      tgChs.map((c) => mhz5(c.tx)).join('|'),
-      'Time', 'Off',
-      'None', 'None', 'None',
-      'None', 'None', 'None',
-      'Selected', '2.0', '3.0', '0.1', '5.0',
-    ]);
-  }
+  addZone('Simplex', simplex);
+  addZone('PMR', pmr);
+  addZone('APRS', aprs);
+  addZone('Custom', custom);
 
   return buildCsv(header, rows);
 }
@@ -421,11 +368,8 @@ function buildAprsCsv(callsign: string): string {
 
 // ── Public API ─────────────────────────────────────────────────────────────────
 
-/** Count channels the Anytone export will produce (FM analog + expanded DMR). */
-export function countAnytoneChannels(entries: (Repeater | StaticChannel)[]): {
-  fm: number;
-  dmr: number;
-} {
+/** Count channels the AnyTone export will produce. */
+export function countAnytoneChannels(entries: (Repeater | StaticChannel)[]): { fm: number; dmr: number } {
   const channels = collectChannels(entries);
   return {
     fm: channels.filter((ch) => !ch.dmr).length,
@@ -444,9 +388,8 @@ export async function buildAnytoneZip(
 
   const files = new Map<string, string>();
   files.set('Channel.CSV', buildChannelCsv(channels, radioName));
-  files.set('TalkGroups.CSV', buildTalkGroupCsv(channels));
+  files.set('TalkGroups.CSV', buildTalkGroupCsv());
   files.set('Zone.CSV', buildZoneCsv(channels));
-  files.set('ScanList.CSV', buildScanListCsv(channels));
 
   const dmrIdNum = parseInt(radioId.dmrId, 10);
   if (radioId.callsign.trim() && !isNaN(dmrIdNum) && dmrIdNum > 0) {
