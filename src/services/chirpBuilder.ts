@@ -1,6 +1,5 @@
-import type { Repeater, StaticChannel } from '../types/repeater';
+import type { RadioChannel } from '../types/channel';
 import { buildCsvPlain } from '../utils/csv';
-import { channelName } from '../utils/channelName';
 import { formatMhz } from '../utils/freq';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -27,40 +26,36 @@ const HEADER = [
   'TStep', 'Skip', 'Comment', 'URCALL', 'RPT1CALL', 'RPT2CALL', 'DVCODE',
 ];
 
-function toRow(entry: Repeater | StaticChannel, location: number): (string | number)[] {
-  // API naming is from the repeater's perspective:
-  //   freq.rx = repeater input  = our TX
-  //   freq.tx = repeater output = our RX
-  const { rx: ourTx, tx: ourRx, tone, channel } = entry.freq;
-  const place = entry.place ?? '';
-  const toneFreq = tone > 0 ? tone : 88.5;
+function toRow(channel: RadioChannel, location: number): (string | number)[] {
+  const { rx, tx, ctcss } = channel;
+  const toneFreq = ctcss > 0 ? ctcss : 88.5;
   return [
     location,
-    channelName(entry).slice(0, 8).toUpperCase(),
-    formatMhz(ourRx),
-    toDuplex(ourRx, ourTx),
-    toOffset(ourRx, ourTx),
-    tone > 0 ? 'Tone' : '',
+    channel.name.slice(0, 8).toUpperCase(),
+    formatMhz(rx),
+    toDuplex(rx, tx),
+    toOffset(rx, tx),
+    ctcss > 0 ? 'Tone' : '',
     toneFreq.toFixed(1),
     toneFreq.toFixed(1),
     '023',
     'NN',
     'FM',
     25,
-    entry.place === 'PMR446' ? 'S' : '',
-    `${channel} ${place}`.trim(),
+    channel.place === 'PMR446' ? 'S' : '',
+    channel.place,
     '', '', '', '',
   ];
 }
 
-export function buildChirpCsv(entries: (Repeater | StaticChannel)[]): string {
+export function buildChirpCsv(channels: RadioChannel[]): string {
   const rows: (string | number)[][] = [];
   let location = 0;
-  for (const entry of entries) {
-    // Only FM-capable entries go into the Chirp CSV
-    if (entry.modes.fm.enabled) {
-      rows.push(toRow(entry, location++));
-    }
+  for (const channel of channels) {
+    // Pure digital channels (dmr set but NOT mixed-mode) are skipped entirely
+    if (channel.dmr && !channel.dmr.mixedMode) continue;
+    // Mixed-mode (dmr exists but also has FM) and pure FM channels are included as analog
+    rows.push(toRow(channel, location++));
   }
   return buildCsvPlain(HEADER, rows);
 }

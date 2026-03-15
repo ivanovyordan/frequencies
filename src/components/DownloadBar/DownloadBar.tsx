@@ -1,27 +1,32 @@
 import { useState } from 'react';
 import type { ContactListSettings, RadioId, Repeater, StaticChannel, SoftwareOption } from '../../types/repeater';
 import { buildChirpCsv } from '../../services/chirpBuilder';
-import { buildAnytoneZip, countAnytoneChannels } from '../../services/anytoneBuilder';
+import { buildAnytoneZip } from '../../services/anytone';
+import { mapChannels, countChannels } from '../../services/channelMapper';
 import { buildContactListCsv } from '../../services/contactListBuilder';
 import { download } from '../../utils/download';
 
 // ── Count helpers ──────────────────────────────────────────────────────────────
 
-function chirpFmCount(entries: (Repeater | StaticChannel)[]): number {
-  return entries.filter((e) => e.modes.fm.enabled).length;
-}
-
 function totalExportable(entries: (Repeater | StaticChannel)[], software: SoftwareOption): number {
-  if (software === 'chirp') return chirpFmCount(entries);
-  const { fm, dmr } = countAnytoneChannels(entries);
+  const channels = mapChannels(entries);
+  if (software === 'chirp') {
+    return channels.filter((ch) => !(ch.dmr && !ch.dmr.mixedMode)).length;
+  }
+  const { fm, dmr } = countChannels(channels);
+  // AnyTone DMR channels expand to up to 3 rows each; for count purposes report pre-expansion
   return fm + dmr;
 }
 
 // ── Info label ─────────────────────────────────────────────────────────────────
 
 function infoLabel(entries: (Repeater | StaticChannel)[], software: SoftwareOption): string {
-  if (software === 'chirp') return `${chirpFmCount(entries)} FM канала → Chirp`;
-  const { fm, dmr } = countAnytoneChannels(entries);
+  const channels = mapChannels(entries);
+  if (software === 'chirp') {
+    const count = channels.filter((ch) => !(ch.dmr && !ch.dmr.mixedMode)).length;
+    return `${count} FM канала → Chirp`;
+  }
+  const { fm, dmr } = countChannels(channels);
   return dmr > 0 ? `${fm} FM + ${dmr} DMR → Anytone` : `${fm} FM → Anytone`;
 }
 
@@ -40,8 +45,9 @@ export function DownloadBar({ software, entries, radioId, contactList }: Props) 
   const disabled = count === 0 || downloading;
 
   async function handleDownload() {
+    const channels = mapChannels(entries);
     if (software === 'chirp') {
-      const blob = new Blob([buildChirpCsv(entries)], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([buildChirpCsv(channels)], { type: 'text/csv;charset=utf-8;' });
       download(blob, 'честоти-chirp.csv');
       return;
     }
@@ -50,7 +56,7 @@ export function DownloadBar({ software, entries, radioId, contactList }: Props) 
       const contactListCsv = contactList.enabled
         ? await buildContactListCsv(contactList.scope)
         : undefined;
-      const blob = await buildAnytoneZip(entries, radioId, contactListCsv);
+      const blob = await buildAnytoneZip(channels, { radioId, contactListCsv });
       download(blob, 'честоти-anytone.zip');
     } finally {
       setDownloading(false);
