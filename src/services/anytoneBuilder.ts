@@ -23,6 +23,7 @@ interface Channel {
     colorCode: number;
     slot: 1 | 2;
     mixedMode: boolean;
+    tgId: number;       // primary talk group ID
   };
 }
 
@@ -35,6 +36,15 @@ function parseColorCode(dmr: RepeaterModeDMR): number {
   if (!dmr.color_code) return 1;
   const cc = parseInt(dmr.color_code, 10);
   return isNaN(cc) ? 1 : cc;
+}
+
+/** Parse the primary TG from a ts1_groups / ts2_groups string (e.g. "284", "2840,2843"). */
+function parsePrimaryTg(tgString: string): number {
+  if (!tgString) return 1;
+  const first = tgString.split(/[,|;\s]+/).find((t) => t.trim().length > 0);
+  if (!first) return 1;
+  const n = parseInt(first.trim(), 10);
+  return isNaN(n) ? 1 : n;
 }
 
 // ── Channel collection ─────────────────────────────────────────────────────────
@@ -61,11 +71,12 @@ function fromEntry(entry: Repeater | StaticChannel): Channel[] {
 
   if (hasFm && hasDmr) {
     const cc = parseColorCode(entry.modes.dmr);
+    const tgId = parsePrimaryTg(entry.modes.dmr.ts1_groups);
     const name = channelName(entry).slice(0, 16);
     channels.push({
       name, rx: ourRx, tx: ourTx, ctcss: tone,
       category: categoryOf(entry), place: entry.place,
-      dmr: { colorCode: cc, slot: 1, mixedMode: true },
+      dmr: { colorCode: cc, slot: 1, mixedMode: true, tgId },
     });
   } else if (hasFm) {
     const name = channelName(entry).slice(0, 16);
@@ -73,11 +84,12 @@ function fromEntry(entry: Repeater | StaticChannel): Channel[] {
     channels.push({ name, rx: ourRx, tx: ourTx, ctcss: tone, category: categoryOf(entry), place: entry.place, pttProhibit });
   } else if (hasDmr) {
     const cc = parseColorCode(entry.modes.dmr);
+    const tgId = parsePrimaryTg(entry.modes.dmr.ts1_groups);
     const name = channelName(entry).slice(0, 16);
     channels.push({
       name, rx: ourRx, tx: ourTx, ctcss: 0,
       category: categoryOf(entry), place: entry.place,
-      dmr: { colorCode: cc, slot: 1, mixedMode: false },
+      dmr: { colorCode: cc, slot: 1, mixedMode: false, tgId },
     });
   }
 
@@ -143,7 +155,7 @@ function buildChannelCsv(channels: Channel[], radioName: string): string {
   // Trailing 27 columns that are the same for every channel
   const tail = [
     'Normal Encryption', 'Off', 'Off', 'Off', 'Off', '251.1', '1',
-    'Off', 'On', 'Off', 'Off', 'Off', 'Off', '1', '0', 'Off',
+    'Off', 'Off', 'Off', 'Off', 'Off', 'Off', '1', '0', 'Off',
     '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
   ];
 
@@ -154,9 +166,9 @@ function buildChannelCsv(channels: Channel[], radioName: string): string {
       return [
         i + 1, ch.name, mhz5(ch.rx), mhz5(ch.tx), chType,
         'High', '12.5K', ct, ct, 'Local',
-        'Group Call', '1', radioName, 'Always', 'Carrier', 'Off',
+        'Group Call', ch.dmr.tgId, radioName, 'Always', 'Carrier', 'Off',
         '1', '1', '1', 'Off', ch.dmr.colorCode, ch.dmr.slot,
-        'None', 'None', 'Off', 'Off', 'Off', 'Off',
+        'None', DMR_RECEIVE_GROUP, 'Off', 'Off', 'Off', 'Off',
         ...tail,
       ];
     }
@@ -173,6 +185,33 @@ function buildChannelCsv(channels: Channel[], radioName: string): string {
   });
 
   return buildCsv(header, rows);
+}
+
+// ── ReceiveGroupCallList.CSV ───────────────────────────────────────────────────
+
+const DMR_RECEIVE_GROUP = 'BG DMR';
+
+/** Group-call TGs included in the receive group list (names must match TalkGroups.CSV). */
+const DMR_RECEIVE_TGS: Array<{ name: string; id: number }> = [
+  { name: 'Local',         id: 1 },
+  { name: 'Cluster',       id: 2 },
+  { name: 'Regional',      id: 8 },
+  { name: 'World-Wide',    id: 91 },
+  { name: 'Europe',        id: 92 },
+  { name: 'Bulgaria',      id: 284 },
+  { name: 'Bulgaria Test', id: 2840 },
+  { name: 'Sofia',         id: 2842 },
+  { name: 'Plovdiv',       id: 2843 },
+  { name: 'LZ0PLD',        id: 28430 },
+  { name: 'BG Disaster',   id: 284112 },
+  { name: 'XLX-359',       id: 284359 },
+];
+
+function buildReceiveGroupListCsv(): string {
+  const header = ['No.', 'Group Name', 'Contact', 'Contact TG/DMR ID'];
+  const names = DMR_RECEIVE_TGS.map((t) => t.name).join('|');
+  const ids = DMR_RECEIVE_TGS.map((t) => t.id).join('|');
+  return buildCsv(header, [[1, DMR_RECEIVE_GROUP, names, ids]]);
 }
 
 // ── TalkGroups.CSV ─────────────────────────────────────────────────────────────
@@ -389,6 +428,7 @@ export async function buildAnytoneZip(
   const files = new Map<string, string>();
   files.set('Channel.CSV', buildChannelCsv(channels, radioName));
   files.set('TalkGroups.CSV', buildTalkGroupCsv());
+  files.set('ReceiveGroupCallList.CSV', buildReceiveGroupListCsv());
   files.set('Zone.CSV', buildZoneCsv(channels));
 
   const dmrIdNum = parseInt(radioId.dmrId, 10);
