@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import type { RadioId, Repeater, StaticChannel, RepeaterModeDMR } from '../types/repeater';
+import type { RadioId, Repeater, StaticChannel } from '../types/repeater';
 import { isRepeater } from '../types/repeater';
 import { oblastForPlace } from '../constants/bgOblasts';
 import { channelName } from '../utils/channelName';
@@ -31,23 +31,36 @@ function ctcssTone(hz: number): string {
   return hz > 0 ? hz.toFixed(1) : 'Off';
 }
 
-/** Parse color_code string; returns 1 (default) if missing or invalid. */
-function parseColorCode(dmr: RepeaterModeDMR): number {
-  if (!dmr.color_code) return 1;
-  const cc = parseInt(dmr.color_code, 10);
-  return isNaN(cc) ? 1 : cc;
-}
-
-/** Parse the primary TG from a ts1_groups / ts2_groups string (e.g. "284", "2840,2843"). */
-function parsePrimaryTg(tgString: string): number {
-  if (!tgString) return 1;
-  const first = tgString.split(/[,|;\s]+/).find((t) => t.trim().length > 0);
-  if (!first) return 1;
-  const n = parseInt(first.trim(), 10);
-  return isNaN(n) ? 1 : n;
-}
 
 // ── Channel collection ─────────────────────────────────────────────────────────
+
+/** Maps oblast names (from oblastForPlace) to their BrandMeister regional TG. */
+const OBLAST_TO_REGIONAL_TG = new Map<string, number>([
+  ['Varna',        2840],
+  ['Sofia',        2842],
+  ['Plovdiv',      2843],
+  ['Burgas',       2844],
+  ['Stara Zagora', 2845],
+  ['Montana',      2846],
+  ['Vratsa',       2846],
+  ['Lovech',       2846],
+  ['Blagoevgrad',  2847],
+  ['Kyustendil',   2847],
+  ['Smolyan',      2847],
+  ['Kardzhali',    2847],
+  ['Pazardzhik',   2847],
+  ['Haskovo',      2847],
+  ['Ruse',         2848],
+  ['Razgrad',      2848],
+  ['Silistra',     2848],
+  ['Dobrich',      2848],
+  ['Shumen',       2848],
+]);
+
+/** Returns the regional TG for a place, or undefined if no mapping exists. */
+function regionalTgForPlace(place: string): number | undefined {
+  return OBLAST_TO_REGIONAL_TG.get(oblastForPlace(place));
+}
 
 function categoryOf(entry: Repeater | StaticChannel): ChannelCategory {
   if (!isRepeater(entry)) {
@@ -69,28 +82,29 @@ function fromEntry(entry: Repeater | StaticChannel): Channel[] {
   const hasFm = entry.modes.fm.enabled;
   const hasDmr = entry.modes.dmr.enabled;
 
-  if (hasFm && hasDmr) {
-    const cc = parseColorCode(entry.modes.dmr);
-    const tgId = parsePrimaryTg(entry.modes.dmr.ts1_groups);
-    const name = channelName(entry).slice(0, 16);
-    channels.push({
-      name, rx: ourRx, tx: ourTx, ctcss: tone,
-      category: categoryOf(entry), place: entry.place,
-      dmr: { colorCode: cc, slot: 1, mixedMode: true, tgId },
-    });
+  if (hasDmr) {
+    const mixedMode = hasFm;
+    const cat = categoryOf(entry);
+    const cs = entry.callsign;
+    const base = { rx: ourRx, tx: ourTx, ctcss: tone, category: cat, place: entry.place };
+    const dmrBase = (slot: 1 | 2, tgId: number) =>
+      ({ colorCode: 1, slot, mixedMode, tgId }) as const;
+
+    // Row A — National: TS1 / TG 284
+    channels.push({ ...base, name: `${cs} BG`.slice(0, 16), dmr: dmrBase(1, 284) });
+
+    // Row B — Regional: TS2 / location-mapped TG (skipped if no mapping)
+    const regTg = regionalTgForPlace(entry.place);
+    if (regTg !== undefined) {
+      channels.push({ ...base, name: `${cs} REG`.slice(0, 16), dmr: dmrBase(2, regTg) });
+    }
+
+    // Row C — Local: TS2 / TG 9
+    channels.push({ ...base, name: `${cs} LOC`.slice(0, 16), dmr: dmrBase(2, 9) });
   } else if (hasFm) {
     const name = channelName(entry).slice(0, 16);
     const pttProhibit = !isRepeater(entry) && entry.pttProhibit === true;
     channels.push({ name, rx: ourRx, tx: ourTx, ctcss: tone, category: categoryOf(entry), place: entry.place, pttProhibit });
-  } else if (hasDmr) {
-    const cc = parseColorCode(entry.modes.dmr);
-    const tgId = parsePrimaryTg(entry.modes.dmr.ts1_groups);
-    const name = channelName(entry).slice(0, 16);
-    channels.push({
-      name, rx: ourRx, tx: ourTx, ctcss: 0,
-      category: categoryOf(entry), place: entry.place,
-      dmr: { colorCode: cc, slot: 1, mixedMode: false, tgId },
-    });
   }
 
   return channels;
@@ -193,18 +207,21 @@ const DMR_RECEIVE_GROUP = 'BG DMR';
 
 /** Group-call TGs included in the receive group list (names must match TalkGroups.CSV). */
 const DMR_RECEIVE_TGS: Array<{ name: string; id: number }> = [
-  { name: 'Local',         id: 1 },
-  { name: 'Cluster',       id: 2 },
-  { name: 'Regional',      id: 8 },
-  { name: 'World-Wide',    id: 91 },
-  { name: 'Europe',        id: 92 },
-  { name: 'Bulgaria',      id: 284 },
-  { name: 'Bulgaria Test', id: 2840 },
-  { name: 'Sofia',         id: 2842 },
-  { name: 'Plovdiv',       id: 2843 },
-  { name: 'LZ0PLD',        id: 28430 },
-  { name: 'BG Disaster',   id: 284112 },
-  { name: 'XLX-359',       id: 284359 },
+  { name: 'Local',        id: 9 },
+  { name: 'Regional',     id: 8 },
+  { name: 'Worldwide',    id: 91 },
+  { name: 'Europe',       id: 92 },
+  { name: 'Bulgaria',     id: 284 },
+  { name: 'Varna',        id: 2840 },
+  { name: 'Sofia',        id: 2842 },
+  { name: 'Plovdiv',      id: 2843 },
+  { name: 'Burgas',       id: 2844 },
+  { name: 'Stara-Zagora', id: 2845 },
+  { name: 'Northwest',    id: 2846 },
+  { name: 'Southwest',    id: 2847 },
+  { name: 'Ruse',        id: 2848 },
+  { name: 'Emergency',    id: 284112 },
+  { name: 'XLX359B',      id: 284359 },
 ];
 
 function buildReceiveGroupListCsv(): string {
@@ -218,23 +235,25 @@ function buildReceiveGroupListCsv(): string {
 
 function buildTalkGroupCsv(): string {
   const rows: (string | number)[][] = [
-    [1,   1,      'Local',         'Group Call',   'None'],
-    [2,   2,      'Cluster',       'Group Call',   'None'],
-    [3,   8,      'Regional',      'Group Call',   'None'],
-    [4,   9,      'Local',         'Group Call',   'None'],
-    [5,   91,     'World-Wide',    'Group Call',   'None'],
-    [6,   92,     'Europe',        'Group Call',   'None'],
-    [7,   284,    'Bulgaria',      'Group Call',   'None'],
-    [8,   2840,   'Bulgaria Test', 'Group Call',   'None'],
-    [9,   2842,   'Sofia',         'Group Call',   'None'],
-    [10,  2843,   'Plovdiv',       'Group Call',   'None'],
-    [11,  28430,  'LZ0PLD',        'Group Call',   'None'],
-    [12,  284112, 'BG Disaster',   'Group Call',   'None'],
-    [13,  284359, 'XLX-359',       'Group Call',   'None'],
-    [14,  284990, 'SMS Test',      'Private Call', 'None'],
-    [15,  284991, 'Repeater Info', 'Private Call', 'None'],
-    [16,  284997, 'Parrot',        'Private Call', 'None'],
-    [17,  284999, 'APRS',          'Private Call', 'None'],
+    [1,   9,      'Local',        'Group Call',   'None'],
+    [2,   8,      'Regional',     'Group Call',   'None'],
+    [3,   91,     'Worldwide',    'Group Call',   'None'],
+    [4,   92,     'Europe',       'Group Call',   'None'],
+    [5,   284,    'Bulgaria',     'Group Call',   'None'],
+    [6,   2840,   'Varna',        'Group Call',   'None'],
+    [7,   2842,   'Sofia',        'Group Call',   'None'],
+    [8,   2843,   'Plovdiv',      'Group Call',   'None'],
+    [9,   2844,   'Burgas',       'Group Call',   'None'],
+    [10,  2845,   'Stara-Zagora', 'Group Call',   'None'],
+    [11,  2846,   'Northwest',    'Group Call',   'None'],
+    [12,  2847,   'Southwest',    'Group Call',   'None'],
+    [13,  2848,   'Ruse',        'Group Call',   'None'],
+    [14,  284112, 'Emergency',    'Group Call',   'None'],
+    [15,  284359, 'XLX359B',      'Group Call',   'None'],
+    [16,  284990, 'SMS Test',     'Private Call', 'None'],
+    [17,  284991, 'Repeater Info','Private Call', 'None'],
+    [18,  284997, 'Parrot',       'Private Call', 'None'],
+    [19,  284999, 'APRS',         'Private Call', 'None'],
   ];
   return buildCsv(['No.', 'Radio ID', 'Name', 'Call Type', 'Call Alert'], rows);
 }
