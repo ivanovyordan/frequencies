@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { ContactListSettings, RadioId } from '../../types/repeater';
+import type { AprsSettings, ContactListSettings, RadioId } from '../../types/repeater';
 
 const labelCls = 'text-[11px] font-semibold uppercase tracking-[0.8px] text-slate-500';
 
@@ -16,10 +16,12 @@ interface Props {
   onRadioIdChange: (r: RadioId) => void;
   contactList: ContactListSettings;
   onContactListChange: (s: ContactListSettings) => void;
+  aprsSettings: AprsSettings;
+  onAprsSettingsChange: (s: AprsSettings) => void;
 }
 
 export function SettingsModal({
-  open, onClose, radioId, onRadioIdChange, contactList, onContactListChange,
+  open, onClose, radioId, onRadioIdChange, contactList, onContactListChange, aprsSettings, onAprsSettingsChange,
 }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
 
@@ -130,6 +132,28 @@ export function SettingsModal({
               </div>
             </div>
           )}
+        </section>
+
+        {/* ── APRS ── */}
+        <section className="flex flex-col gap-3 pt-5 border-t border-slate-100">
+          <div className={labelCls}>APRS (само AnyTone)</div>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[11px] text-slate-500">Автоматичен интервал (сек, 0 = изкл.)</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="180"
+              maxLength={5}
+              value={aprsSettings.autoTxInterval}
+              onChange={(e) => {
+                const val = parseInt(e.target.value.replace(/\D/g, '') || '0', 10);
+                onAprsSettingsChange({ ...aprsSettings, autoTxInterval: val });
+              }}
+              className={`${inputCls} w-28`}
+              aria-label="APRS Auto TX Interval"
+            />
+          </div>
         </section>
 
       </div>

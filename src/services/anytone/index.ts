@@ -47,7 +47,7 @@ export async function buildAnytoneZip(
   }
 
   if (radioName !== 'Local') {
-    files.set('APRS.CSV', buildAprsCsv(radioName));
+    files.set('APRS.CSV', buildAprsCsv(radioName, options?.aprsSettings?.autoTxInterval));
   }
 
   const zip = new JSZip();

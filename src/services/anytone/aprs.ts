@@ -2,7 +2,7 @@ import { buildCsv } from '../../utils/csv';
 
 // ── APRS.CSV ───────────────────────────────────────────────────────────────────
 
-export function buildAprsCsv(callsign: string): string {
+export function buildAprsCsv(callsign: string, autoTxInterval = 180): string {
   const header: string[] = [
     'Manual TX Interval[s]', 'APRS Auto TX Interval[s]', 'Support For Roaming', 'Fixed Location Beacon',
     'LatiDegree', 'LatiMinInt', 'LatiMinMark', 'North or South',
@@ -40,7 +40,7 @@ export function buildAprsCsv(callsign: string): string {
   }
 
   const row: (string | number)[] = [
-    40, 0, 0, 0,   // Manual TX Interval, Auto TX Interval, Roaming, Fixed Beacon (off — no coords)
+    40, autoTxInterval, 0, 0,   // Manual TX Interval, Auto TX Interval, Roaming, Fixed Beacon (off — no coords)
     0, 0, 0, 0,    // Lat (disabled)
     0, 0, 0, 0,    // Lon (disabled)
   ];

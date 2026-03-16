@@ -111,3 +111,7 @@ export interface ContactListSettings {
   scope: 'bulgaria' | 'worldwide';
 }
 
+export interface AprsSettings {
+  autoTxInterval: number; // seconds; 0 = disabled
+}
+

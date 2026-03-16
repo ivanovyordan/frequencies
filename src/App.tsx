@@ -5,6 +5,7 @@ import { useGeolocation } from './hooks/useGeolocation';
 import { useRadioId } from './hooks/useRadioId';
 import { useCustomChannels } from './hooks/useCustomChannels';
 import { useContactList } from './hooks/useContactList';
+import { useAprsSettings } from './hooks/useAprsSettings';
 import { applyFilters } from './services/filter';
 import { FilterPanel } from './components/FilterPanel/FilterPanel';
 import { ControlPanel } from './components/ControlPanel/ControlPanel';
@@ -19,6 +20,7 @@ function App() {
   const [radioId, setRadioId] = useRadioId();
   const [customChannels, setCustomChannels] = useCustomChannels();
   const [contactList, setContactList] = useContactList();
+  const [aprsSettings, setAprsSettings] = useAprsSettings();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const filteredEntries = useMemo(
@@ -84,6 +86,7 @@ function App() {
         entries={filteredEntries}
         radioId={radioId}
         contactList={contactList}
+        aprsSettings={aprsSettings}
       />
 
       <SettingsModal
@@ -93,6 +96,8 @@ function App() {
         onRadioIdChange={setRadioId}
         contactList={contactList}
         onContactListChange={setContactList}
+        aprsSettings={aprsSettings}
+        onAprsSettingsChange={setAprsSettings}
       />
     </div>
   );

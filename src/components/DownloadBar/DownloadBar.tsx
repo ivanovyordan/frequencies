@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ContactListSettings, RadioId, Repeater, StaticChannel, SoftwareOption } from '../../types/repeater';
+import type { AprsSettings, ContactListSettings, RadioId, Repeater, StaticChannel, SoftwareOption } from '../../types/repeater';
 import { buildChirpCsv } from '../../services/chirpBuilder';
 import { buildAnytoneZip } from '../../services/anytone';
 import { mapChannels, countChannels } from '../../services/channelMapper';
@@ -37,9 +37,10 @@ interface Props {
   entries: (Repeater | StaticChannel)[];
   radioId: RadioId;
   contactList: ContactListSettings;
+  aprsSettings: AprsSettings;
 }
 
-export function DownloadBar({ software, entries, radioId, contactList }: Props) {
+export function DownloadBar({ software, entries, radioId, contactList, aprsSettings }: Props) {
   const [downloading, setDownloading] = useState(false);
   const count = totalExportable(entries, software);
   const disabled = count === 0 || downloading;
@@ -56,7 +57,7 @@ export function DownloadBar({ software, entries, radioId, contactList }: Props) 
       const contactListCsv = contactList.enabled
         ? await buildContactListCsv(contactList.scope)
         : undefined;
-      const blob = await buildAnytoneZip(channels, { radioId, contactListCsv });
+      const blob = await buildAnytoneZip(channels, { radioId, contactListCsv, aprsSettings });
       download(blob, 'честоти-anytone.zip');
     } finally {
       setDownloading(false);
