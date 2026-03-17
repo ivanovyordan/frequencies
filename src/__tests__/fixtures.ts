@@ -1,4 +1,4 @@
-import type { Repeater, StaticChannel } from '../types/repeater';
+import type { Repeater } from '../types/repeater';
 
 export function makeRepeater(overrides: Partial<Repeater> & { callsign: string }): Repeater {
   return {

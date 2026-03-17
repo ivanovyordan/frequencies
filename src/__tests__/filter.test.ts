@@ -3,11 +3,6 @@ import { applyFilters } from '../services/filter';
 import { makeRepeater, makeDmrRepeater, makeNationalRepeater, VARNA_COORDS, NO_COORDS } from './fixtures';
 import type { FilterState } from '../types/repeater';
 
-const ALL_ON: FilterState = {
-  national: true, analog: true, dmr: true, parrot: true,
-  simplex: true, pmr: true, aprs: true, custom: true,
-};
-
 const ALL_OFF: FilterState = {
   national: false, analog: false, dmr: false, parrot: false,
   simplex: false, pmr: false, aprs: false, custom: false,
