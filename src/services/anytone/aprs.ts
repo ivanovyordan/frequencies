@@ -57,7 +57,7 @@ export function buildAprsCsv(callsign: string, autoTxInterval = 180): string {
     'WIDE1-1,WIDE2-2',                         // Digipeater Path
     `73 ${callsign}`,                          // Sending Text
     144,                                       // Transmission Frequency [MHz]
-    1200, 0, 0, 19, 1500, 0,                  // Delay, Sub Tone, CTCSS, DCS, Prewave, Power
+    1200, 0, 0, 19, 1500, 2,                  // Delay, Sub Tone, CTCSS, DCS, Prewave, Power (Mid)
   );
 
   for (let i = 0; i < 32; i++) row.push(0, '', 0);  // Receive filters (all Off)

@@ -149,7 +149,7 @@ export function buildChannelCsv(channels: AnytoneChannel[], radioName: string): 
       const ct = ctcssTone(ch.ctcss);
       return [
         i + 1, ch.name, mhz5(ch.rx), mhz5(ch.tx), chType,
-        'High', '12.5K', ct, ct, 'Local',
+        'Mid', '12.5K', ct, ct, 'Local',
         'Group Call', ch.dmr.tgId, radioName, 'Always', 'Carrier', 'Off',
         '1', '1', '1', 'Off', ch.dmr.colorCode, ch.dmr.slot,
         'None', DMR_RECEIVE_GROUP, 'Off', 'Off', 'Off', 'Off',
@@ -157,7 +157,7 @@ export function buildChannelCsv(channels: AnytoneChannel[], radioName: string): 
       ];
     }
     const ct = ctcssTone(ch.ctcss);
-    const power = ch.category === 'pmr' ? 'Low' : 'High';
+    const power = ch.category === 'pmr' ? 'Low' : 'Mid';
     return [
       i + 1, ch.name, mhz5(ch.rx), mhz5(ch.tx), 'A-Analog',
       power, '12.5K', ct, ct, 'Local',
