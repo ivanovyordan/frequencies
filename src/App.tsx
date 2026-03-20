@@ -15,7 +15,7 @@ import { SettingsModal } from './components/Settings/SettingsModal';
 
 function App() {
   const { repeaters, loading, error } = useRepeaters();
-  const { filters, disabledKeys, software, onToggle, onSoftwareChange } = useFilters();
+  const { filters, disabledKeys, software, maxDistanceKm, onToggle, onSoftwareChange, onMaxDistanceChange } = useFilters();
   const { coords, geoLoading, geoError, findMe, setCoords } = useGeolocation();
   const [radioId, setRadioId] = useRadioId();
   const [customChannels, setCustomChannels] = useCustomChannels();
@@ -24,8 +24,8 @@ function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const filteredEntries = useMemo(
-    () => applyFilters(repeaters, filters, coords, customChannels),
-    [repeaters, filters, coords, customChannels],
+    () => applyFilters(repeaters, filters, coords, customChannels, maxDistanceKm),
+    [repeaters, filters, coords, customChannels, maxDistanceKm],
   );
 
   return (
@@ -58,6 +58,9 @@ function App() {
           filters={filters}
           disabledKeys={disabledKeys}
           onToggle={onToggle}
+          maxDistanceKm={maxDistanceKm}
+          onMaxDistanceChange={onMaxDistanceChange}
+          hasCoords={coords.latitude !== null}
           customChannels={customChannels}
           onCustomChannelsChange={setCustomChannels}
         />

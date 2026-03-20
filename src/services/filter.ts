@@ -87,8 +87,13 @@ export function applyFilters(
   filters: FilterState,
   coords: Coordinates,
   customChannels: CustomChannel[] = [],
+  maxDistanceKm = 0,
 ): (Repeater | StaticChannel)[] {
-  const active = repeaters.filter((r) => !r.disabled);
+  const withinRange = maxDistanceKm > 0 && coords.latitude !== null && coords.longitude !== null
+    ? (r: Repeater) => haversineKm(coords.latitude!, coords.longitude!, r.latitude, r.longitude) <= maxDistanceKm
+    : () => true;
+
+  const active = repeaters.filter((r) => !r.disabled && withinRange(r));
 
   // Section 1 — National (FM or DMR only; skip pure D-Star/Fusion)
   // Deduplicated to one per channel number, sorted R0 → R14.

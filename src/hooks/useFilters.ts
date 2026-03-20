@@ -20,13 +20,16 @@ export interface UseFiltersResult {
   filters: FilterState;
   disabledKeys: ReadonlySet<keyof FilterState>;
   software: SoftwareOption;
+  maxDistanceKm: number;
   onToggle: (key: keyof FilterState) => void;
   onSoftwareChange: (v: SoftwareOption) => void;
+  onMaxDistanceChange: (km: number) => void;
 }
 
 export function useFilters(): UseFiltersResult {
   const [filters, setFilters] = useLocalStorage<FilterState>('freq_filters', DEFAULT_FILTERS);
   const [software, setSoftware] = useLocalStorage<SoftwareOption>('freq_software', 'chirp');
+  const [maxDistanceKm, setMaxDistanceKm] = useLocalStorage<number>('freq_max_distance', 0);
 
   const disabledKeys = useMemo<ReadonlySet<keyof FilterState>>(
     () => (software === 'chirp' ? new Set(CHIRP_DISABLED) : new Set()),
@@ -54,5 +57,5 @@ export function useFilters(): UseFiltersResult {
     }
   }, [setFilters, setSoftware]);
 
-  return { filters, disabledKeys, software, onToggle, onSoftwareChange };
+  return { filters, disabledKeys, software, maxDistanceKm, onToggle, onSoftwareChange, onMaxDistanceChange: setMaxDistanceKm };
 }
