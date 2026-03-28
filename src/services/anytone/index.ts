@@ -4,12 +4,13 @@ import type { RadioId } from '../../types/repeater';
 import { buildCsv } from '../../utils/csv';
 import type { BuilderOptions } from '../builders';
 import { buildAprsCsv } from './aprs';
-import { buildChannelCsv, expandChannels } from './channels';
+import { expandChannels } from '../shared/channels';
+import { buildChannelCsv } from './channels';
 import { buildLst } from './manifest';
 import { buildReceiveGroupListCsv, buildTalkGroupCsv } from './talkGroups';
 import { buildZoneCsv } from './zones';
 
-export type { AnytoneChannel } from './channels';
+export type { ExpandedChannel } from '../shared/channels';
 
 // ── RadioIDList.CSV ────────────────────────────────────────────────────────────
 

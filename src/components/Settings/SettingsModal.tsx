@@ -93,7 +93,7 @@ export function SettingsModal({
         </section>
 
         {/* ── DMR Contact List (AnyTone + QDMR) ── */}
-        {(software === 'anytone' || software === 'qdmr') && (
+        {software !== 'chirp' && (
           <section className="flex flex-col gap-3 pt-5 border-t border-slate-100">
             <div className={labelCls}>DMR контактен лист</div>
             <label className="flex items-center gap-2.5 cursor-pointer select-none">
@@ -138,7 +138,7 @@ export function SettingsModal({
         )}
 
         {/* ── APRS (AnyTone + QDMR) ── */}
-        {(software === 'anytone' || software === 'qdmr') && (
+        {software !== 'chirp' && (
           <section className="flex flex-col gap-3 pt-5 border-t border-slate-100">
             <div className={labelCls}>APRS</div>
             <div className="flex flex-col gap-0.5">

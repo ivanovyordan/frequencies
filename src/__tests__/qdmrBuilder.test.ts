@@ -4,7 +4,7 @@ import { buildQdmrContacts, buildQdmrGroupList } from '../services/qdmr/contacts
 import { buildQdmrChannels } from '../services/qdmr/channels';
 import { buildQdmrZones } from '../services/qdmr/zones';
 import { buildQdmrYaml } from '../services/qdmr';
-import { expandChannels } from '../services/anytone/channels';
+import { expandChannels } from '../services/shared/channels';
 import { mapChannels } from '../services/channelMapper';
 import { makeDmrRepeater, makeRepeater } from './fixtures';
 import type { QdmrDocument } from '../services/qdmr/types';
@@ -168,13 +168,13 @@ describe('buildQdmrZones', () => {
   const zones = buildQdmrZones(expanded);
 
   it('includes All Channels zone with all channel keys', () => {
-    const all = zones.find((z) => z.id === 'zone_all');
+    const all = zones.find((z) => z.id === 'zone_all_channels');
     expect(all).toBeDefined();
     expect(all!.channels).toHaveLength(expanded.length);
   });
 
   it('DMR Repeaters zone only has digital channels', () => {
-    const dmrZone = zones.find((z) => z.id === 'zone_dmr');
+    const dmrZone = zones.find((z) => z.id === 'zone_dmr_repeaters');
     expect(dmrZone).toBeDefined();
     expect(dmrZone!.channels).toHaveLength(3); // BG + REG + LOC
   });

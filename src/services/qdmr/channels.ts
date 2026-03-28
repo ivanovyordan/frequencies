@@ -1,6 +1,6 @@
-import type { AnytoneChannel } from '../anytone/channels';
+import type { ExpandedChannel } from '../shared/channels';
 import { hzToMhz } from '../../utils/freq';
-import { tgKey } from './contacts';
+import { GROUP_LIST_ID, RADIO_ID_KEY, tgKey } from './contacts';
 import type { QdmrChannelEntry } from './types';
 
 export function channelKey(index: number): string {
@@ -8,7 +8,7 @@ export function channelKey(index: number): string {
 }
 
 export function buildQdmrChannels(
-  channels: AnytoneChannel[],
+  channels: ExpandedChannel[],
   hasRadioId: boolean,
 ): { key: string; entry: QdmrChannelEntry }[] {
   return channels.map((ch, i) => ({
@@ -17,7 +17,7 @@ export function buildQdmrChannels(
   }));
 }
 
-function buildAnalogEntry(ch: AnytoneChannel): QdmrChannelEntry {
+function buildAnalogEntry(ch: ExpandedChannel): QdmrChannelEntry {
   const tone = ch.ctcss > 0 ? { ctcss: ch.ctcss } : undefined;
   return {
     analog: {
@@ -31,7 +31,7 @@ function buildAnalogEntry(ch: AnytoneChannel): QdmrChannelEntry {
   };
 }
 
-function buildDigitalEntry(ch: AnytoneChannel, hasRadioId: boolean): QdmrChannelEntry {
+function buildDigitalEntry(ch: ExpandedChannel, hasRadioId: boolean): QdmrChannelEntry {
   return {
     digital: {
       name: ch.name,
@@ -40,9 +40,9 @@ function buildDigitalEntry(ch: AnytoneChannel, hasRadioId: boolean): QdmrChannel
       power: 'Mid',
       colorCode: ch.dmr!.colorCode,
       timeSlot: ch.dmr!.slot === 1 ? 'TS1' : 'TS2',
-      groupList: 'grp_bg',
+      groupList: GROUP_LIST_ID,
       contact: tgKey(ch.dmr!.tgId),
-      ...(hasRadioId && { radioId: 'id0' }),
+      ...(hasRadioId && { radioId: RADIO_ID_KEY }),
     },
   };
 }

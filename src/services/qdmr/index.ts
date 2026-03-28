@@ -1,8 +1,9 @@
 import yaml from 'js-yaml';
 import type { RadioChannel } from '../../types/channel';
 import type { BuilderOptions } from '../builders';
-import { expandChannels } from '../anytone/channels';
-import { buildQdmrContacts, buildQdmrGroupList, tgKey } from './contacts';
+import { expandChannels } from '../shared/channels';
+import { APRS_TG_ID } from '../shared/talkGroups';
+import { buildQdmrContacts, buildQdmrGroupList, RADIO_ID_KEY, tgKey } from './contacts';
 import { buildQdmrChannels } from './channels';
 import { buildQdmrZones } from './zones';
 import type { QdmrDmrContact, QdmrDocument } from './types';
@@ -25,19 +26,16 @@ export function buildQdmrYaml(
   options?: BuilderOptions,
 ): string {
   const expanded = expandChannels(channels);
-  const hasRadioId = !!(options?.radioId?.callsign.trim() && parseInt(options.radioId.dmrId) > 0);
+  const dmrId = parseInt(options?.radioId?.dmrId ?? '');
+  const callsign = options?.radioId?.callsign.trim() ?? '';
+  const hasRadioId = !!(callsign && dmrId > 0);
   const channelEntries = buildQdmrChannels(expanded, hasRadioId);
-
   const aprsPeriod = options?.aprsSettings?.autoTxInterval ?? 0;
 
   const doc: QdmrDocument = {
     ...(hasRadioId && {
       radioIDs: [{
-        dmr: {
-          id: 'id0',
-          name: options!.radioId!.callsign.trim(),
-          number: parseInt(options!.radioId!.dmrId),
-        },
+        dmr: { id: RADIO_ID_KEY, name: callsign, number: dmrId },
       }],
     }),
     contacts: [...buildQdmrContacts(), ...buildUserContacts(options)],
@@ -54,7 +52,7 @@ export function buildQdmrYaml(
           id: 'pos0',
           name: 'BM APRS',
           period: aprsPeriod,
-          contact: tgKey(284999),
+          contact: tgKey(APRS_TG_ID),
         },
       }],
     }),
