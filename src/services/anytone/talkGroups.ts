@@ -53,6 +53,7 @@ export function buildTalkGroupCsv(): string {
     [17,  284991, 'Repeater Info','Private Call', 'None'],
     [18,  284997, 'Parrot',       'Private Call', 'None'],
     [19,  284999, 'APRS',         'Private Call', 'None'],
+    [20,  4000,   'Disconnect',   'Private Call', 'None'],
   ];
   return buildCsv(['No.', 'Radio ID', 'Name', 'Call Type', 'Call Alert'], rows);
 }
