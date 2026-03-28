@@ -95,6 +95,7 @@ function App() {
       <SettingsModal
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
+        software={software}
         radioId={radioId}
         onRadioIdChange={setRadioId}
         contactList={contactList}

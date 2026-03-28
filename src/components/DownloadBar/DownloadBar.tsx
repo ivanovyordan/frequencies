@@ -2,8 +2,9 @@ import { useState } from 'react';
 import type { AprsSettings, ContactListSettings, RadioId, Repeater, StaticChannel, SoftwareOption } from '../../types/repeater';
 import { buildChirpCsv } from '../../services/chirpBuilder';
 import { buildAnytoneZip } from '../../services/anytone';
+import { buildQdmrYaml } from '../../services/qdmr';
 import { mapChannels, countChannels } from '../../services/channelMapper';
-import { buildContactListCsv } from '../../services/contactListBuilder';
+import { buildContactListCsv, fetchContactList } from '../../services/contactListBuilder';
 import { download } from '../../utils/download';
 
 // ── Count helpers ──────────────────────────────────────────────────────────────
@@ -14,7 +15,6 @@ function totalExportable(entries: (Repeater | StaticChannel)[], software: Softwa
     return channels.filter((ch) => !(ch.dmr && !ch.dmr.mixedMode)).length;
   }
   const { fm, dmr } = countChannels(channels);
-  // AnyTone DMR channels expand to up to 3 rows each; for count purposes report pre-expansion
   return fm + dmr;
 }
 
@@ -27,7 +27,8 @@ function infoLabel(entries: (Repeater | StaticChannel)[], software: SoftwareOpti
     return `${count} FM канала → Chirp`;
   }
   const { fm, dmr } = countChannels(channels);
-  return dmr > 0 ? `${fm} FM + ${dmr} DMR → Anytone` : `${fm} FM → Anytone`;
+  const label = software === 'qdmr' ? 'QDMR' : 'Anytone';
+  return dmr > 0 ? `${fm} FM + ${dmr} DMR → ${label}` : `${fm} FM → ${label}`;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -50,6 +51,22 @@ export function DownloadBar({ software, entries, radioId, contactList, aprsSetti
     if (software === 'chirp') {
       const blob = new Blob([buildChirpCsv(channels)], { type: 'text/csv;charset=utf-8;' });
       download(blob, 'честоти-chirp.csv');
+      return;
+    }
+    if (software === 'qdmr') {
+      setDownloading(true);
+      try {
+        const userContacts = contactList.enabled
+          ? await fetchContactList(contactList.scope)
+          : undefined;
+        const blob = new Blob(
+          [buildQdmrYaml(channels, { radioId, contactList: userContacts, aprsSettings })],
+          { type: 'application/yaml;charset=utf-8;' },
+        );
+        download(blob, 'честоти-qdmr.yaml');
+      } finally {
+        setDownloading(false);
+      }
       return;
     }
     setDownloading(true);

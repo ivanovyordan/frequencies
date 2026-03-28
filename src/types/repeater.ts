@@ -67,7 +67,7 @@ export function isRepeater(entry: Repeater | StaticChannel): entry is Repeater {
 
 // ── App state types ────────────────────────────────────────────────────────────
 
-export type SoftwareOption = 'chirp' | 'anytone';
+export type SoftwareOption = 'chirp' | 'qdmr' | 'anytone';
 
 export interface FilterState {
   national: boolean;

@@ -100,11 +100,17 @@ function toRows(contacts: ContactRow[]): (string | number)[][] {
 
 // ── Public API ─────────────────────────────────────────────────────────────────
 
+export type { ContactRow };
+
+export async function fetchContactList(
+  scope: 'bulgaria' | 'worldwide',
+): Promise<ContactRow[]> {
+  return scope === 'bulgaria' ? fetchBulgaria() : fetchWorldwide();
+}
+
 export async function buildContactListCsv(
   scope: 'bulgaria' | 'worldwide',
 ): Promise<string> {
-  const contacts = scope === 'bulgaria'
-    ? await fetchBulgaria()
-    : await fetchWorldwide();
+  const contacts = await fetchContactList(scope);
   return buildCsv(HEADER, toRows(contacts));
 }

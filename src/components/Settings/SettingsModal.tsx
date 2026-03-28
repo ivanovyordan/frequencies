@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { AprsSettings, ContactListSettings, RadioId } from '../../types/repeater';
+import type { AprsSettings, ContactListSettings, RadioId, SoftwareOption } from '../../types/repeater';
 
 const labelCls = 'text-[11px] font-semibold uppercase tracking-[0.8px] text-slate-500';
 
@@ -12,6 +12,7 @@ const inputCls =
 interface Props {
   open: boolean;
   onClose: () => void;
+  software: SoftwareOption;
   radioId: RadioId;
   onRadioIdChange: (r: RadioId) => void;
   contactList: ContactListSettings;
@@ -21,7 +22,7 @@ interface Props {
 }
 
 export function SettingsModal({
-  open, onClose, radioId, onRadioIdChange, contactList, onContactListChange, aprsSettings, onAprsSettingsChange,
+  open, onClose, software, radioId, onRadioIdChange, contactList, onContactListChange, aprsSettings, onAprsSettingsChange,
 }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
 
@@ -91,70 +92,74 @@ export function SettingsModal({
           </div>
         </section>
 
-        {/* ── DMR Contact List ── */}
-        <section className="flex flex-col gap-3 pt-5 border-t border-slate-100">
-          <div className={labelCls}>DMR контактен лист</div>
-          <label className="flex items-center gap-2.5 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={contactList.enabled}
-              onChange={(e) => onContactListChange({ ...contactList, enabled: e.target.checked })}
-              className="w-4 h-4 accent-blue-700 cursor-pointer"
-            />
-            <span className="text-sm text-slate-700">Включи в AnyTone експорта</span>
-          </label>
+        {/* ── DMR Contact List (AnyTone + QDMR) ── */}
+        {(software === 'anytone' || software === 'qdmr') && (
+          <section className="flex flex-col gap-3 pt-5 border-t border-slate-100">
+            <div className={labelCls}>DMR контактен лист</div>
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={contactList.enabled}
+                onChange={(e) => onContactListChange({ ...contactList, enabled: e.target.checked })}
+                className="w-4 h-4 accent-blue-700 cursor-pointer"
+              />
+              <span className="text-sm text-slate-700">Включи в експорта</span>
+            </label>
 
-          {contactList.enabled && (
-            <div className="flex flex-col gap-2 pl-6">
-              <span className="text-[11px] text-slate-500">Обхват</span>
-              <div className="flex flex-col gap-1.5">
-                {(
-                  [
-                    { value: 'bulgaria', label: 'България', hint: '~800 позивни' },
-                    { value: 'worldwide', label: 'Целият свят', hint: '~300 000 позивни, бавно сваляне' },
-                  ] as const
-                ).map(({ value, label, hint }) => (
-                  <label key={value} className="flex items-start gap-2 cursor-pointer select-none">
-                    <input
-                      type="radio"
-                      name="contact-scope"
-                      value={value}
-                      checked={contactList.scope === value}
-                      onChange={() => onContactListChange({ ...contactList, scope: value })}
-                      className="mt-0.5 accent-blue-700 cursor-pointer"
-                    />
-                    <span className="flex flex-col">
-                      <span className="text-sm text-slate-700">{label}</span>
-                      <span className="text-[11px] text-slate-400">{hint}</span>
-                    </span>
-                  </label>
-                ))}
+            {contactList.enabled && (
+              <div className="flex flex-col gap-2 pl-6">
+                <span className="text-[11px] text-slate-500">Обхват</span>
+                <div className="flex flex-col gap-1.5">
+                  {(
+                    [
+                      { value: 'bulgaria', label: 'България', hint: '~800 позивни' },
+                      { value: 'worldwide', label: 'Целият свят', hint: '~300 000 позивни, бавно сваляне' },
+                    ] as const
+                  ).map(({ value, label, hint }) => (
+                    <label key={value} className="flex items-start gap-2 cursor-pointer select-none">
+                      <input
+                        type="radio"
+                        name="contact-scope"
+                        value={value}
+                        checked={contactList.scope === value}
+                        onChange={() => onContactListChange({ ...contactList, scope: value })}
+                        className="mt-0.5 accent-blue-700 cursor-pointer"
+                      />
+                      <span className="flex flex-col">
+                        <span className="text-sm text-slate-700">{label}</span>
+                        <span className="text-[11px] text-slate-400">{hint}</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-        </section>
+            )}
+          </section>
+        )}
 
-        {/* ── APRS ── */}
-        <section className="flex flex-col gap-3 pt-5 border-t border-slate-100">
-          <div className={labelCls}>APRS (само AnyTone)</div>
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[11px] text-slate-500">Автоматичен интервал (сек, 0 = изкл.)</span>
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              placeholder="180"
-              maxLength={5}
-              value={aprsSettings.autoTxInterval}
-              onChange={(e) => {
-                const val = parseInt(e.target.value.replace(/\D/g, '') || '0', 10);
-                onAprsSettingsChange({ ...aprsSettings, autoTxInterval: val });
-              }}
-              className={`${inputCls} w-28`}
-              aria-label="APRS Auto TX Interval"
-            />
-          </div>
-        </section>
+        {/* ── APRS (AnyTone + QDMR) ── */}
+        {(software === 'anytone' || software === 'qdmr') && (
+          <section className="flex flex-col gap-3 pt-5 border-t border-slate-100">
+            <div className={labelCls}>APRS</div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[11px] text-slate-500">Автоматичен интервал (сек, 0 = изкл.)</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                placeholder="180"
+                maxLength={5}
+                value={aprsSettings.autoTxInterval}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value.replace(/\D/g, '') || '0', 10);
+                  onAprsSettingsChange({ ...aprsSettings, autoTxInterval: val });
+                }}
+                className={`${inputCls} w-28`}
+                aria-label="APRS Auto TX Interval"
+              />
+            </div>
+          </section>
+        )}
 
       </div>
     </dialog>
