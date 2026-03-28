@@ -12,7 +12,10 @@ export function channelName(entry: Repeater | StaticChannel): string {
     .split(',')
     .map((c) => c.trim())
     .filter((c) => !/^R[UV]/i.test(c))
-    .map((c) => { const m = /^(R\d+)/i.exec(c); return m ? m[1].toUpperCase() : c; })
+    .map((c) => {
+      const m = /^(R\d+)/i.exec(c);
+      return m ? m[1].toUpperCase() : c;
+    })
     .join(', ');
 
   if (cleaned) return cleaned;

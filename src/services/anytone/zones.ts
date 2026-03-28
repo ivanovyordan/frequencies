@@ -13,10 +13,18 @@ function mhz5(hz: number): string {
 export function buildZoneCsv(channels: ExpandedChannel[]): string {
   // 12 columns matching AnyTone CPS zone export (trailing space on "Zone Hide " is intentional)
   const header = [
-    'No.', 'Zone Name', 'Zone Channel Member',
-    'Zone Channel Member RX Frequency', 'Zone Channel Member TX Frequency',
-    'A Channel', 'A Channel RX Frequency', 'A Channel TX Frequency',
-    'B Channel', 'B Channel RX Frequency', 'B Channel TX Frequency', 'Zone Hide ',
+    'No.',
+    'Zone Name',
+    'Zone Channel Member',
+    'Zone Channel Member RX Frequency',
+    'Zone Channel Member TX Frequency',
+    'A Channel',
+    'A Channel RX Frequency',
+    'A Channel TX Frequency',
+    'B Channel',
+    'B Channel RX Frequency',
+    'B Channel TX Frequency',
+    'Zone Hide ',
   ];
 
   const rows: (string | number)[][] = [];
@@ -29,9 +37,18 @@ export function buildZoneCsv(channels: ExpandedChannel[]): string {
     const a = members[0];
     const b = members.length > 1 ? members[1] : a;
     rows.push([
-      no++, name, chNames, chRx, chTx,
-      a.name, mhz5(a.rx), mhz5(a.tx),
-      b.name, mhz5(b.rx), mhz5(b.tx), '0',
+      no++,
+      name,
+      chNames,
+      chRx,
+      chTx,
+      a.name,
+      mhz5(a.rx),
+      mhz5(a.tx),
+      b.name,
+      mhz5(b.rx),
+      mhz5(b.tx),
+      '0',
     ]);
   }
 

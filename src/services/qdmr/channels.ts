@@ -11,33 +11,38 @@ export function buildQdmrChannels(
   channels: ExpandedChannel[],
   hasRadioId: boolean,
 ): { key: string; entry: QdmrChannelEntry }[] {
-  return channels.map((ch, i) => ({
-    key: channelKey(i),
-    entry: ch.dmr ? buildDigitalEntry(ch, hasRadioId) : buildAnalogEntry(ch),
-  }));
+  return channels.map((ch, i) => {
+    const key = channelKey(i);
+    return {
+      key,
+      entry: ch.dmr ? buildDigitalEntry(key, ch, hasRadioId) : buildAnalogEntry(key, ch),
+    };
+  });
 }
 
-function buildAnalogEntry(ch: ExpandedChannel): QdmrChannelEntry {
+function buildAnalogEntry(id: string, ch: ExpandedChannel): QdmrChannelEntry {
   const tone = ch.ctcss > 0 ? { ctcss: ch.ctcss } : undefined;
   return {
     analog: {
+      id,
       name: ch.name,
       rxFrequency: hzToMhz(ch.rx),
       txFrequency: hzToMhz(ch.tx),
-      power: ch.category === 'pmr' ? 'Low' : 'Mid',
+      power: ch.category === 'pmr' ? 'Low' : 'High',
       squelch: 4,
       ...(tone && { rxTone: tone, txTone: tone }),
     },
   };
 }
 
-function buildDigitalEntry(ch: ExpandedChannel, hasRadioId: boolean): QdmrChannelEntry {
+function buildDigitalEntry(id: string, ch: ExpandedChannel, hasRadioId: boolean): QdmrChannelEntry {
   return {
     digital: {
+      id,
       name: ch.name,
       rxFrequency: hzToMhz(ch.rx),
       txFrequency: hzToMhz(ch.tx),
-      power: 'Mid',
+      power: 'High',
       colorCode: ch.dmr!.colorCode,
       timeSlot: ch.dmr!.slot === 1 ? 'TS1' : 'TS2',
       groupList: GROUP_LIST_ID,

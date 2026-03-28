@@ -1,18 +1,20 @@
 export interface QdmrAnalogChannel {
+  id: string;
   name: string;
   rxFrequency: number;
   txFrequency: number;
-  power: 'Low' | 'Mid' | 'High';
+  power: 'Low' | 'High';
   squelch: number;
   rxTone?: { ctcss: number };
   txTone?: { ctcss: number };
 }
 
 export interface QdmrDigitalChannel {
+  id: string;
   name: string;
   rxFrequency: number;
   txFrequency: number;
-  power: 'Low' | 'Mid' | 'High';
+  power: 'Low' | 'High';
   colorCode: number;
   timeSlot: 'TS1' | 'TS2';
   groupList: string;
@@ -20,9 +22,7 @@ export interface QdmrDigitalChannel {
   radioId?: string;
 }
 
-export type QdmrChannelEntry =
-  | { analog: QdmrAnalogChannel }
-  | { digital: QdmrDigitalChannel };
+export type QdmrChannelEntry = { analog: QdmrAnalogChannel } | { digital: QdmrDigitalChannel };
 
 export interface QdmrDmrContact {
   id: string;
@@ -40,7 +40,7 @@ export interface QdmrGroupList {
 export interface QdmrZone {
   id: string;
   name: string;
-  channels: string[];
+  A: string[];
 }
 
 export interface QdmrRadioId {

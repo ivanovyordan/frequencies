@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { expandChannels, regionalTgForPlace, OBLAST_TO_REGIONAL_TG } from '../services/anytone/channels';
+import {
+  expandChannels,
+  regionalTgForPlace,
+  OBLAST_TO_REGIONAL_TG,
+} from '../services/anytone/channels';
 import { mapChannels } from '../services/channelMapper';
 import { makeDmrRepeater, makeMixedRepeater, makeRepeater } from './fixtures';
 

@@ -15,15 +15,9 @@ const badgeCls =
 function ModeBadges({ modes }: { modes: RepeaterModes }) {
   return (
     <div className="flex gap-0.5 flex-wrap">
-      {modes.fm.enabled && (
-        <span className={`${badgeCls} bg-blue-100 text-blue-800`}>FM</span>
-      )}
-      {modes.usb?.enabled && (
-        <span className={`${badgeCls} bg-sky-100 text-sky-800`}>SSB</span>
-      )}
-      {modes.dmr.enabled && (
-        <span className={`${badgeCls} bg-amber-100 text-amber-800`}>DMR</span>
-      )}
+      {modes.fm.enabled && <span className={`${badgeCls} bg-blue-100 text-blue-800`}>FM</span>}
+      {modes.usb?.enabled && <span className={`${badgeCls} bg-sky-100 text-sky-800`}>SSB</span>}
+      {modes.dmr.enabled && <span className={`${badgeCls} bg-amber-100 text-amber-800`}>DMR</span>}
       {modes.dstar.enabled && (
         <span className={`${badgeCls} bg-green-100 text-green-800`}>D-Star</span>
       )}
@@ -59,7 +53,9 @@ export function RepeaterRow({ entry, index, coords, showDistance }: Props) {
         <strong>{channelName(entry)}</strong>
       </td>
       <td className={tdMonoCls}>{hzToMhz(entry.freq.rx)}</td>
-      <td className={tdMonoCls}>{entry.freq.rx === entry.freq.tx ? '—' : hzToMhz(entry.freq.tx)}</td>
+      <td className={tdMonoCls}>
+        {entry.freq.rx === entry.freq.tx ? '—' : hzToMhz(entry.freq.tx)}
+      </td>
       <td className={tdMonoCls}>{entry.freq.tone > 0 ? entry.freq.tone.toFixed(1) : '—'}</td>
       <td className={tdCls}>{entry.place}</td>
       <td className={tdCls}>

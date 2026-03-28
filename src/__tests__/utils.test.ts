@@ -60,7 +60,10 @@ describe('getNationalNum', () => {
   });
 
   it('returns null for non-national channels', () => {
-    const r = makeRepeater({ callsign: 'LZ0ZAF', freq: { rx: 431_100_000, tx: 438_700_000, tone: 88.5, channel: 'RU696' } });
+    const r = makeRepeater({
+      callsign: 'LZ0ZAF',
+      freq: { rx: 431_100_000, tx: 438_700_000, tone: 88.5, channel: 'RU696' },
+    });
     expect(getNationalNum(r)).toBeNull();
   });
 

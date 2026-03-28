@@ -11,7 +11,10 @@ export interface UseGeolocationResult {
 }
 
 export function useGeolocation(): UseGeolocationResult {
-  const [coords, setCoords] = useLocalStorage<Coordinates>('freq_coords', { latitude: null, longitude: null });
+  const [coords, setCoords] = useLocalStorage<Coordinates>('freq_coords', {
+    latitude: null,
+    longitude: null,
+  });
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
 

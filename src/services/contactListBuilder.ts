@@ -27,9 +27,7 @@ interface ApiPage {
 }
 
 async function fetchApiPage(page: number): Promise<ApiPage> {
-  const res = await fetch(
-    `https://radioid.net/api/dmr/user/?country=Bulgaria&page=${page}`,
-  );
+  const res = await fetch(`https://radioid.net/api/dmr/user/?country=Bulgaria&page=${page}`);
   if (!res.ok) throw new Error(`RadioID API error ${res.status}`);
   return res.json() as Promise<ApiPage>;
 }
@@ -67,8 +65,7 @@ async function fetchWorldwide(): Promise<ContactRow[]> {
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
-    const [radioIdStr, callsign, firstName, lastName, city, state, country] =
-      line.split(',');
+    const [radioIdStr, callsign, firstName, lastName, city, state, country] = line.split(',');
     const radioId = parseInt(radioIdStr, 10);
     if (isNaN(radioId)) continue;
     contacts.push({
@@ -77,7 +74,7 @@ async function fetchWorldwide(): Promise<ContactRow[]> {
       name: [firstName, lastName].filter(Boolean).join(' '),
       city: city ?? '',
       state: state ?? '',
-      country: country?.trim() ?? '',  // trim trailing \r from CRLF
+      country: country?.trim() ?? '', // trim trailing \r from CRLF
     });
   }
 
@@ -87,14 +84,30 @@ async function fetchWorldwide(): Promise<ContactRow[]> {
 // ── CSV builder ────────────────────────────────────────────────────────────────
 
 const HEADER = [
-  'No.', 'Radio ID', 'Callsign', 'Name', 'City', 'State', 'Country',
-  'Remarks', 'Call Type', 'Call Alert',
+  'No.',
+  'Radio ID',
+  'Callsign',
+  'Name',
+  'City',
+  'State',
+  'Country',
+  'Remarks',
+  'Call Type',
+  'Call Alert',
 ];
 
 function toRows(contacts: ContactRow[]): (string | number)[][] {
   return contacts.map((c, i) => [
-    i + 1, c.radioId, c.callsign, c.name,
-    c.city, c.state, c.country, '', 'Private Call', 'None',
+    i + 1,
+    c.radioId,
+    c.callsign,
+    c.name,
+    c.city,
+    c.state,
+    c.country,
+    '',
+    'Private Call',
+    'None',
   ]);
 }
 
@@ -102,15 +115,11 @@ function toRows(contacts: ContactRow[]): (string | number)[][] {
 
 export type { ContactRow };
 
-export async function fetchContactList(
-  scope: 'bulgaria' | 'worldwide',
-): Promise<ContactRow[]> {
+export async function fetchContactList(scope: 'bulgaria' | 'worldwide'): Promise<ContactRow[]> {
   return scope === 'bulgaria' ? fetchBulgaria() : fetchWorldwide();
 }
 
-export async function buildContactListCsv(
-  scope: 'bulgaria' | 'worldwide',
-): Promise<string> {
+export async function buildContactListCsv(scope: 'bulgaria' | 'worldwide'): Promise<string> {
   const contacts = await fetchContactList(scope);
   return buildCsv(HEADER, toRows(contacts));
 }

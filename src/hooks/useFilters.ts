@@ -44,18 +44,29 @@ export function useFilters(): UseFiltersResult {
     [disabledKeys, setFilters],
   );
 
-  const onSoftwareChange = useCallback((v: SoftwareOption) => {
-    setSoftware(v);
-    if (v === 'chirp') {
-      setFilters((prev) => {
-        const next = { ...prev };
-        for (const k of CHIRP_DISABLED) {
-          next[k] = false;
-        }
-        return next;
-      });
-    }
-  }, [setFilters, setSoftware]);
+  const onSoftwareChange = useCallback(
+    (v: SoftwareOption) => {
+      setSoftware(v);
+      if (v === 'chirp') {
+        setFilters((prev) => {
+          const next = { ...prev };
+          for (const k of CHIRP_DISABLED) {
+            next[k] = false;
+          }
+          return next;
+        });
+      }
+    },
+    [setFilters, setSoftware],
+  );
 
-  return { filters, disabledKeys, software, maxDistanceKm, onToggle, onSoftwareChange, onMaxDistanceChange: setMaxDistanceKm };
+  return {
+    filters,
+    disabledKeys,
+    software,
+    maxDistanceKm,
+    onToggle,
+    onSoftwareChange,
+    onMaxDistanceChange: setMaxDistanceKm,
+  };
 }

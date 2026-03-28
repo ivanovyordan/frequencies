@@ -21,9 +21,24 @@ function toOffset(stationRx: number, stationTx: number): string {
 // ── CSV building ───────────────────────────────────────────────────────────────
 
 const HEADER = [
-  'Location', 'Name', 'Frequency', 'Duplex', 'Offset', 'Tone',
-  'rToneFreq', 'cToneFreq', 'DtcsCode', 'DtcsPolarity', 'Mode',
-  'TStep', 'Skip', 'Comment', 'URCALL', 'RPT1CALL', 'RPT2CALL', 'DVCODE',
+  'Location',
+  'Name',
+  'Frequency',
+  'Duplex',
+  'Offset',
+  'Tone',
+  'rToneFreq',
+  'cToneFreq',
+  'DtcsCode',
+  'DtcsPolarity',
+  'Mode',
+  'TStep',
+  'Skip',
+  'Comment',
+  'URCALL',
+  'RPT1CALL',
+  'RPT2CALL',
+  'DVCODE',
 ];
 
 function toRow(channel: RadioChannel, location: number): (string | number)[] {
@@ -44,7 +59,10 @@ function toRow(channel: RadioChannel, location: number): (string | number)[] {
     25,
     channel.place === 'PMR446' ? 'S' : '',
     channel.place,
-    '', '', '', '',
+    '',
+    '',
+    '',
+    '',
   ];
 }
 

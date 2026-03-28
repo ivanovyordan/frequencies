@@ -1,5 +1,12 @@
 import { useMemo, useState } from 'react';
-import type { AprsSettings, ContactListSettings, RadioId, Repeater, StaticChannel, SoftwareOption } from '../../types/repeater';
+import type {
+  AprsSettings,
+  ContactListSettings,
+  RadioId,
+  Repeater,
+  StaticChannel,
+  SoftwareOption,
+} from '../../types/repeater';
 import type { RadioChannel } from '../../types/channel';
 import { buildChirpCsv } from '../../services/chirpBuilder';
 import { buildAnytoneZip } from '../../services/anytone';
@@ -84,7 +91,13 @@ export function DownloadBar({ software, entries, radioId, contactList, aprsSetti
   async function handleDownload() {
     setDownloading(true);
     try {
-      const { blob, filename } = await buildExport(software, channels, radioId, contactList, aprsSettings);
+      const { blob, filename } = await buildExport(
+        software,
+        channels,
+        radioId,
+        contactList,
+        aprsSettings,
+      );
       download(blob, filename);
     } finally {
       setDownloading(false);

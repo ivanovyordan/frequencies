@@ -23,7 +23,7 @@ function makeAprs(name: string, freqMhz: number): StaticChannel {
 
 // Standard European APRS frequencies (IARU Region 1)
 export const APRS_CHANNELS: StaticChannel[] = [
-  makeAprs('APRS',     144.800),         // VHF primary (EU/AF)
-  makeAprs('APRS ISS', 145.825),        // ISS / satellite
-  makeAprs('APRS UHF', 432.500),        // UHF packet
+  makeAprs('APRS', 144.8), // VHF primary (EU/AF)
+  makeAprs('APRS ISS', 145.825), // ISS / satellite
+  makeAprs('APRS UHF', 432.5), // UHF packet
 ];

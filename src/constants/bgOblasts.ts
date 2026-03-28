@@ -10,8 +10,8 @@ export const PLACE_TO_OBLAST = new Map<string, string>([
   ['Асеновград', 'Plovdiv'],
   ['Банско', 'Blagoevgrad'],
   ['Благоевград', 'Blagoevgrad'],
-  ['Ботев', 'Plovdiv'],          // Botev Peak — Karlovo municipality
-  ['Бузлуджа', 'Stara Zagora'],  // Buzludzha Peak — Kazanlak municipality
+  ['Ботев', 'Plovdiv'], // Botev Peak — Karlovo municipality
+  ['Бузлуджа', 'Stara Zagora'], // Buzludzha Peak — Kazanlak municipality
   ['Бургас', 'Burgas'],
   ['Варна', 'Varna'],
   ['Велико Търново', 'Veliko Tarnovo'],
@@ -21,19 +21,19 @@ export const PLACE_TO_OBLAST = new Map<string, string>([
   ['Димитровград', 'Haskovo'],
   ['Добринище', 'Blagoevgrad'],
   ['Добрич', 'Dobrich'],
-  ['Златица', 'Sofia'],          // Sofia Oblast (not Sofia City)
+  ['Златица', 'Sofia'], // Sofia Oblast (not Sofia City)
   ['Златоград', 'Smolyan'],
   ['Каварна', 'Dobrich'],
   ['Карлово', 'Plovdiv'],
   ['Кърджали', 'Kardzhali'],
   ['Кюстендил', 'Kyustendil'],
   ['Монтана', 'Montana'],
-  ['Мусала', 'Sofia'],           // Musala Peak — Samokov municipality, Sofia Oblast
+  ['Мусала', 'Sofia'], // Musala Peak — Samokov municipality, Sofia Oblast
   ['Оряхово', 'Vratsa'],
   ['Павликени', 'Veliko Tarnovo'],
   ['Пазарджик', 'Pazardzhik'],
   ['Пампорово', 'Smolyan'],
-  ['Петрохан', 'Montana'],       // Petrohan Pass — Berkovitsa municipality
+  ['Петрохан', 'Montana'], // Petrohan Pass — Berkovitsa municipality
   ['Пловдив', 'Plovdiv'],
   ['Поморие', 'Burgas'],
   ['Провадия', 'Varna'],

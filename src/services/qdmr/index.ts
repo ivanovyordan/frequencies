@@ -21,10 +21,7 @@ function buildUserContacts(options?: BuilderOptions): Array<{ dmr: QdmrDmrContac
   }));
 }
 
-export function buildQdmrYaml(
-  channels: RadioChannel[],
-  options?: BuilderOptions,
-): string {
+export function buildQdmrYaml(channels: RadioChannel[], options?: BuilderOptions): string {
   const expanded = expandChannels(channels);
   const dmrId = parseInt(options?.radioId?.dmrId ?? '');
   const callsign = options?.radioId?.callsign.trim() ?? '';
@@ -34,9 +31,11 @@ export function buildQdmrYaml(
 
   const doc: QdmrDocument = {
     ...(hasRadioId && {
-      radioIDs: [{
-        dmr: { id: RADIO_ID_KEY, name: callsign, number: dmrId },
-      }],
+      radioIDs: [
+        {
+          dmr: { id: RADIO_ID_KEY, name: callsign, number: dmrId },
+        },
+      ],
     }),
     contacts: [...buildQdmrContacts(), ...buildUserContacts(options)],
     groupLists: [buildQdmrGroupList()],
@@ -47,14 +46,16 @@ export function buildQdmrYaml(
         systems: ['GPS', 'Glonass'],
         units: 'Metric' as const,
       },
-      positioning: [{
-        dmr: {
-          id: 'pos0',
-          name: 'BM APRS',
-          period: aprsPeriod,
-          contact: tgKey(APRS_TG_ID),
+      positioning: [
+        {
+          dmr: {
+            id: 'pos0',
+            name: 'BM APRS',
+            period: aprsPeriod,
+            contact: tgKey(APRS_TG_ID),
+          },
         },
-      }],
+      ],
     }),
   };
 

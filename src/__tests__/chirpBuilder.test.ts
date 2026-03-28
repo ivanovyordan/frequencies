@@ -35,7 +35,10 @@ describe('buildChirpCsv', () => {
   });
 
   it('truncates name to 8 chars and uppercases', () => {
-    const repeater = makeRepeater({ callsign: 'TOOLONGCALLSIGN', freq: { rx: 145_000_000, tx: 145_600_000, tone: 88.5, channel: 'R2' } });
+    const repeater = makeRepeater({
+      callsign: 'TOOLONGCALLSIGN',
+      freq: { rx: 145_000_000, tx: 145_600_000, tone: 88.5, channel: 'R2' },
+    });
     const channels = mapChannels([repeater]);
     const row = dataRows(buildChirpCsv(channels))[0];
     const name = row.split(',')[1];
@@ -44,13 +47,23 @@ describe('buildChirpCsv', () => {
   });
 
   it('uses Tone when ctcss > 0', () => {
-    const channels = mapChannels([makeRepeater({ callsign: 'LZ0ASG', freq: { rx: 145_000_000, tx: 145_600_000, tone: 88.5, channel: 'R2' } })]);
+    const channels = mapChannels([
+      makeRepeater({
+        callsign: 'LZ0ASG',
+        freq: { rx: 145_000_000, tx: 145_600_000, tone: 88.5, channel: 'R2' },
+      }),
+    ]);
     const row = dataRows(buildChirpCsv(channels))[0];
     expect(row).toContain('Tone');
   });
 
   it('leaves Tone blank when ctcss = 0', () => {
-    const channels = mapChannels([makeRepeater({ callsign: 'LZ0ASG', freq: { rx: 145_000_000, tx: 145_600_000, tone: 0, channel: 'R2' } })]);
+    const channels = mapChannels([
+      makeRepeater({
+        callsign: 'LZ0ASG',
+        freq: { rx: 145_000_000, tx: 145_600_000, tone: 0, channel: 'R2' },
+      }),
+    ]);
     const row = dataRows(buildChirpCsv(channels))[0];
     const fields = row.split(',');
     expect(fields[5]).toBe(''); // Tone column
@@ -58,7 +71,12 @@ describe('buildChirpCsv', () => {
 
   it('sets duplex + for standard 600 kHz offset', () => {
     // rx=145.6, tx=145.0 → user RX > user TX → duplex '-'
-    const channels = mapChannels([makeRepeater({ callsign: 'LZ0ASG', freq: { rx: 145_000_000, tx: 145_600_000, tone: 0, channel: 'R2' } })]);
+    const channels = mapChannels([
+      makeRepeater({
+        callsign: 'LZ0ASG',
+        freq: { rx: 145_000_000, tx: 145_600_000, tone: 0, channel: 'R2' },
+      }),
+    ]);
     const row = dataRows(buildChirpCsv(channels))[0];
     const duplex = row.split(',')[3];
     expect(duplex).toBe('-');

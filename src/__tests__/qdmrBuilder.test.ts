@@ -170,13 +170,13 @@ describe('buildQdmrZones', () => {
   it('includes All Channels zone with all channel keys', () => {
     const all = zones.find((z) => z.id === 'zone_all_channels');
     expect(all).toBeDefined();
-    expect(all!.channels).toHaveLength(expanded.length);
+    expect(all!.A).toHaveLength(expanded.length);
   });
 
   it('DMR Repeaters zone only has digital channels', () => {
     const dmrZone = zones.find((z) => z.id === 'zone_dmr_repeaters');
     expect(dmrZone).toBeDefined();
-    expect(dmrZone!.channels).toHaveLength(3); // BG + REG + LOC
+    expect(dmrZone!.A).toHaveLength(3); // BG + REG + LOC
   });
 
   it('skips empty zones', () => {
@@ -240,8 +240,22 @@ describe('buildQdmrYaml', () => {
   it('includes user contacts when contactList provided', () => {
     const output = buildQdmrYaml(channels, {
       contactList: [
-        { radioId: 2840001, callsign: 'LZ1ABC', name: 'Ivan', city: '', state: '', country: 'Bulgaria' },
-        { radioId: 2840002, callsign: 'LZ2XYZ', name: 'Petar', city: '', state: '', country: 'Bulgaria' },
+        {
+          radioId: 2840001,
+          callsign: 'LZ1ABC',
+          name: 'Ivan',
+          city: '',
+          state: '',
+          country: 'Bulgaria',
+        },
+        {
+          radioId: 2840002,
+          callsign: 'LZ2XYZ',
+          name: 'Petar',
+          city: '',
+          state: '',
+          country: 'Bulgaria',
+        },
       ],
     });
     const doc = yaml.load(output) as QdmrDocument;

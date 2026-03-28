@@ -1,10 +1,15 @@
-import type { CustomChannel, Repeater, StaticChannel, FilterState, Coordinates } from '../types/repeater';
+import type {
+  CustomChannel,
+  Repeater,
+  StaticChannel,
+  FilterState,
+  Coordinates,
+} from '../types/repeater';
 import { SIMPLEX_CHANNELS } from '../constants/simplex';
 import { PMR_CHANNELS } from '../constants/pmr';
 import { APRS_CHANNELS } from '../constants/aprs';
 import { haversineKm } from '../utils/geo';
 import { isNational, getNationalNum } from '../utils/national';
-
 
 function customToStaticChannel(ch: CustomChannel): StaticChannel {
   const rx = Math.round(parseFloat(ch.rxMhz) * 1_000_000);
@@ -56,7 +61,12 @@ function deduplicateNationals(repeaters: Repeater[], coords: Coordinates): Repea
     if (!existing) {
       best.set(num, r);
     } else if (coords.latitude !== null && coords.longitude !== null) {
-      const existDist = haversineKm(coords.latitude, coords.longitude, existing.latitude, existing.longitude);
+      const existDist = haversineKm(
+        coords.latitude,
+        coords.longitude,
+        existing.latitude,
+        existing.longitude,
+      );
       const newDist = haversineKm(coords.latitude, coords.longitude, r.latitude, r.longitude);
       if (newDist < existDist) best.set(num, r);
     }
@@ -89,9 +99,11 @@ export function applyFilters(
   customChannels: CustomChannel[] = [],
   maxDistanceKm = 0,
 ): (Repeater | StaticChannel)[] {
-  const withinRange = maxDistanceKm > 0 && coords.latitude !== null && coords.longitude !== null
-    ? (r: Repeater) => haversineKm(coords.latitude!, coords.longitude!, r.latitude, r.longitude) <= maxDistanceKm
-    : () => true;
+  const withinRange =
+    maxDistanceKm > 0 && coords.latitude !== null && coords.longitude !== null
+      ? (r: Repeater) =>
+          haversineKm(coords.latitude!, coords.longitude!, r.latitude, r.longitude) <= maxDistanceKm
+      : () => true;
 
   const active = repeaters.filter((r) => !r.disabled && withinRange(r));
 
@@ -101,9 +113,9 @@ export function applyFilters(
 
   const nationals: Repeater[] = filters.national
     ? deduplicateNationals(
-      active.filter((r) => isNational(r) && hasUsableMode(r)),
-      coords,
-    ).sort((a, b) => (getNationalNum(a) ?? 99) - (getNationalNum(b) ?? 99))
+        active.filter((r) => isNational(r) && hasUsableMode(r)),
+        coords,
+      ).sort((a, b) => (getNationalNum(a) ?? 99) - (getNationalNum(b) ?? 99))
     : [];
 
   // Section 2 — Everything else that matches, sorted by distance.

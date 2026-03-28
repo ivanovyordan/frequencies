@@ -55,7 +55,10 @@ export function makeMixedRepeater(overrides: Partial<Repeater> & { callsign: str
   });
 }
 
-export function makeNationalRepeater(channel: string, overrides: Partial<Repeater> & { callsign: string }): Repeater {
+export function makeNationalRepeater(
+  channel: string,
+  overrides: Partial<Repeater> & { callsign: string },
+): Repeater {
   return makeRepeater({
     freq: { rx: 145_000_000, tx: 145_600_000, tone: 88.5, channel },
     ...overrides,

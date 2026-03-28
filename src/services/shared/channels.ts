@@ -2,10 +2,10 @@ import { oblastForPlace } from '../../constants/bgOblasts';
 import type { RadioChannel } from '../../types/channel';
 
 export interface ExpandedChannel {
-  name: string;         // ≤16 chars, unique across the export
-  rx: number;           // Hz
-  tx: number;           // Hz
-  ctcss: number;        // Hz, 0 = off
+  name: string; // ≤16 chars, unique across the export
+  rx: number; // Hz
+  tx: number; // Hz
+  ctcss: number; // Hz, 0 = off
   category: RadioChannel['category'];
   place: string;
   pttProhibit?: boolean;
@@ -13,31 +13,31 @@ export interface ExpandedChannel {
     colorCode: number;
     slot: 1 | 2;
     mixedMode: boolean;
-    tgId: number;       // primary talk group ID
+    tgId: number; // primary talk group ID
   };
 }
 
 /** Maps oblast names (from oblastForPlace) to their BrandMeister regional TG. */
 export const OBLAST_TO_REGIONAL_TG = new Map<string, number>([
-  ['Varna',        2840],
-  ['Sofia',        2842],
-  ['Plovdiv',      2843],
-  ['Burgas',       2844],
+  ['Varna', 2840],
+  ['Sofia', 2842],
+  ['Plovdiv', 2843],
+  ['Burgas', 2844],
   ['Stara Zagora', 2845],
-  ['Montana',      2846],
-  ['Vratsa',       2846],
-  ['Lovech',       2846],
-  ['Blagoevgrad',  2847],
-  ['Kyustendil',   2847],
-  ['Smolyan',      2847],
-  ['Kardzhali',    2847],
-  ['Pazardzhik',   2847],
-  ['Haskovo',      2847],
-  ['Ruse',         2848],
-  ['Razgrad',      2848],
-  ['Silistra',     2848],
-  ['Dobrich',      2848],
-  ['Shumen',       2848],
+  ['Montana', 2846],
+  ['Vratsa', 2846],
+  ['Lovech', 2846],
+  ['Blagoevgrad', 2847],
+  ['Kyustendil', 2847],
+  ['Smolyan', 2847],
+  ['Kardzhali', 2847],
+  ['Pazardzhik', 2847],
+  ['Haskovo', 2847],
+  ['Ruse', 2848],
+  ['Razgrad', 2848],
+  ['Silistra', 2848],
+  ['Dobrich', 2848],
+  ['Shumen', 2848],
 ]);
 
 /** Returns the regional TG for a place, or undefined if no mapping exists. */
@@ -64,7 +64,13 @@ export function expandChannels(channels: RadioChannel[]): ExpandedChannel[] {
   for (const ch of channels) {
     if (ch.dmr) {
       const { colorCode, mixedMode } = ch.dmr;
-      const base = { rx: ch.rx, tx: ch.tx, ctcss: ch.ctcss, category: ch.category, place: ch.place };
+      const base = {
+        rx: ch.rx,
+        tx: ch.tx,
+        ctcss: ch.ctcss,
+        category: ch.category,
+        place: ch.place,
+      };
       const dmrBase = (slot: 1 | 2, tgId: number) =>
         ({ colorCode, slot, mixedMode, tgId }) as const;
 

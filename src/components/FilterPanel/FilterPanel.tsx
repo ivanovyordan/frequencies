@@ -31,7 +31,16 @@ interface Props {
 
 const DISTANCE_OPTIONS = [0, 25, 50, 100, 150, 200, 300, 500];
 
-export function FilterPanel({ filters, disabledKeys, onToggle, maxDistanceKm, onMaxDistanceChange, hasCoords, customChannels, onCustomChannelsChange }: Props) {
+export function FilterPanel({
+  filters,
+  disabledKeys,
+  onToggle,
+  maxDistanceKm,
+  onMaxDistanceChange,
+  hasCoords,
+  customChannels,
+  onCustomChannelsChange,
+}: Props) {
   return (
     <aside className="bg-white border-r border-slate-200 px-4 py-5 overflow-y-auto flex flex-col gap-1">
       <div className="text-[11px] font-semibold uppercase tracking-[0.8px] text-slate-500 mb-2">
@@ -64,9 +73,7 @@ export function FilterPanel({ filters, disabledKeys, onToggle, maxDistanceKm, on
             </option>
           ))}
         </select>
-        {!hasCoords && (
-          <p className="text-[10px] text-slate-400 mt-1">Нужна е локация</p>
-        )}
+        {!hasCoords && <p className="text-[10px] text-slate-400 mt-1">Нужна е локация</p>}
       </div>
 
       <div className="mt-4 pt-4 border-t border-slate-100">

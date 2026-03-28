@@ -40,7 +40,10 @@ export async function buildAnytoneZip(
 
   const dmrIdNum = parseInt(radioId.dmrId, 10);
   if (radioId.callsign.trim() && !isNaN(dmrIdNum) && dmrIdNum > 0) {
-    files.set('RadioIDList.CSV', buildRadioIdListCsv({ callsign: radioName, dmrId: radioId.dmrId }));
+    files.set(
+      'RadioIDList.CSV',
+      buildRadioIdListCsv({ callsign: radioName, dmrId: radioId.dmrId }),
+    );
   }
 
   if (contactListCsv) {

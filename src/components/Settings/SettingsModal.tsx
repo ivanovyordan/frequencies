@@ -1,5 +1,10 @@
 import { useEffect, useRef } from 'react';
-import type { AprsSettings, ContactListSettings, RadioId, SoftwareOption } from '../../types/repeater';
+import type {
+  AprsSettings,
+  ContactListSettings,
+  RadioId,
+  SoftwareOption,
+} from '../../types/repeater';
 
 const labelCls = 'text-[11px] font-semibold uppercase tracking-[0.8px] text-slate-500';
 
@@ -22,7 +27,15 @@ interface Props {
 }
 
 export function SettingsModal({
-  open, onClose, software, radioId, onRadioIdChange, contactList, onContactListChange, aprsSettings, onAprsSettingsChange,
+  open,
+  onClose,
+  software,
+  radioId,
+  onRadioIdChange,
+  contactList,
+  onContactListChange,
+  aprsSettings,
+  onAprsSettingsChange,
 }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
 
@@ -58,7 +71,6 @@ export function SettingsModal({
       </div>
 
       <div className="px-5 py-5 flex flex-col gap-6">
-
         {/* ── Radio ID ── */}
         <section className="flex flex-col gap-3">
           <div className={labelCls}>Radio ID</div>
@@ -70,7 +82,9 @@ export function SettingsModal({
                 placeholder="LZ9DB"
                 maxLength={10}
                 value={radioId.callsign}
-                onChange={(e) => onRadioIdChange({ ...radioId, callsign: e.target.value.toUpperCase() })}
+                onChange={(e) =>
+                  onRadioIdChange({ ...radioId, callsign: e.target.value.toUpperCase() })
+                }
                 className={`${inputCls} w-28`}
                 aria-label="Позивна"
               />
@@ -84,7 +98,9 @@ export function SettingsModal({
                 placeholder="2050000"
                 maxLength={7}
                 value={radioId.dmrId}
-                onChange={(e) => onRadioIdChange({ ...radioId, dmrId: e.target.value.replace(/\D/g, '') })}
+                onChange={(e) =>
+                  onRadioIdChange({ ...radioId, dmrId: e.target.value.replace(/\D/g, '') })
+                }
                 className={`${inputCls} w-28`}
                 aria-label="DMR ID"
               />
@@ -113,10 +129,17 @@ export function SettingsModal({
                   {(
                     [
                       { value: 'bulgaria', label: 'България', hint: '~800 позивни' },
-                      { value: 'worldwide', label: 'Целият свят', hint: '~300 000 позивни, бавно сваляне' },
+                      {
+                        value: 'worldwide',
+                        label: 'Целият свят',
+                        hint: '~300 000 позивни, бавно сваляне',
+                      },
                     ] as const
                   ).map(({ value, label, hint }) => (
-                    <label key={value} className="flex items-start gap-2 cursor-pointer select-none">
+                    <label
+                      key={value}
+                      className="flex items-start gap-2 cursor-pointer select-none"
+                    >
                       <input
                         type="radio"
                         name="contact-scope"
@@ -142,7 +165,9 @@ export function SettingsModal({
           <section className="flex flex-col gap-3 pt-5 border-t border-slate-100">
             <div className={labelCls}>APRS</div>
             <div className="flex flex-col gap-0.5">
-              <span className="text-[11px] text-slate-500">Автоматичен интервал (сек, 0 = изкл.)</span>
+              <span className="text-[11px] text-slate-500">
+                Автоматичен интервал (сек, 0 = изкл.)
+              </span>
               <input
                 type="text"
                 inputMode="numeric"
@@ -160,7 +185,6 @@ export function SettingsModal({
             </div>
           </section>
         )}
-
       </div>
     </dialog>
   );

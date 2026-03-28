@@ -1,11 +1,23 @@
 import { describe, it, expect } from 'vitest';
 import { applyFilters } from '../services/filter';
-import { makeRepeater, makeDmrRepeater, makeNationalRepeater, VARNA_COORDS, NO_COORDS } from './fixtures';
+import {
+  makeRepeater,
+  makeDmrRepeater,
+  makeNationalRepeater,
+  VARNA_COORDS,
+  NO_COORDS,
+} from './fixtures';
 import type { FilterState } from '../types/repeater';
 
 const ALL_OFF: FilterState = {
-  national: false, analog: false, dmr: false, parrot: false,
-  simplex: false, pmr: false, aprs: false, custom: false,
+  national: false,
+  analog: false,
+  dmr: false,
+  parrot: false,
+  simplex: false,
+  pmr: false,
+  aprs: false,
+  custom: false,
 };
 
 describe('applyFilters', () => {

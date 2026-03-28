@@ -81,17 +81,17 @@ export interface FilterState {
 }
 
 export interface CustomChannelDMR {
-  colorCode: string;   // e.g. "1"
+  colorCode: string; // e.g. "1"
   slot: '1' | '2';
-  talkgroups: string;  // comma-separated TG IDs
+  talkgroups: string; // comma-separated TG IDs
 }
 
 export interface CustomChannel {
   id: string;
-  name: string;    // ≤16 chars
-  rxMhz: string;   // e.g. "144.500"
-  txMhz: string;   // "" = same as RX (simplex)
-  tone: string;    // Hz, "" = off (ignored for DMR)
+  name: string; // ≤16 chars
+  rxMhz: string; // e.g. "144.500"
+  txMhz: string; // "" = same as RX (simplex)
+  tone: string; // Hz, "" = off (ignored for DMR)
   enabled: boolean;
   dmr?: CustomChannelDMR;
 }
@@ -103,7 +103,7 @@ export interface Coordinates {
 
 export interface RadioId {
   callsign: string; // e.g. "LZ9DB"
-  dmrId: string;    // numeric string, empty = not set
+  dmrId: string; // numeric string, empty = not set
 }
 
 export interface ContactListSettings {
@@ -114,4 +114,3 @@ export interface ContactListSettings {
 export interface AprsSettings {
   autoTxInterval: number; // seconds; 0 = disabled
 }
-

@@ -13,7 +13,11 @@ export function buildReceiveGroupListCsv(): string {
 
 export function buildTalkGroupCsv(): string {
   const rows = DMR_ALL_TGS.map((t, i) => [
-    i + 1, t.id, t.name, t.type === 'GroupCall' ? 'Group Call' : 'Private Call', 'None',
+    i + 1,
+    t.id,
+    t.name,
+    t.type === 'GroupCall' ? 'Group Call' : 'Private Call',
+    'None',
   ]);
   return buildCsv(['No.', 'Radio ID', 'Name', 'Call Type', 'Call Alert'], rows);
 }
