@@ -62,7 +62,21 @@ export function expandChannels(channels: RadioChannel[]): ExpandedChannel[] {
   }
 
   for (const ch of channels) {
-    if (ch.dmr) {
+    if (ch.dmr && ch.category === 'custom') {
+      // Custom DMR channels: pass through as-is with user-specified slot/TG
+      const { colorCode, mixedMode, ts1Groups, ts2Groups } = ch.dmr;
+      const slot: 1 | 2 = ts1Groups ? 1 : 2;
+      const tgId = parseInt((ts1Groups || ts2Groups).split(',')[0], 10) || 9;
+      push({
+        name: ch.name,
+        rx: ch.rx,
+        tx: ch.tx,
+        ctcss: ch.ctcss,
+        category: ch.category,
+        place: ch.place,
+        dmr: { colorCode, slot, mixedMode, tgId },
+      });
+    } else if (ch.dmr) {
       const { colorCode, mixedMode } = ch.dmr;
       const base = {
         rx: ch.rx,
